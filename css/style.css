@@ -6,8 +6,14 @@
 
 .container {}
 
-.heading {
-    font-size: 80px;
-    font-family: 'Sofia', 'GFS Didot', 'GFS Neohellenic', serif;
-    clear: both;
+h1 {
+    /*Font encoding presents a problem; in Palatino Linotype is complete for Greek polytonic fonts
+    in Unicode. In case Palatino Linotype fails, the Google Fonts provide backup (but doesn't seem 
+    to display well. Gentium might be helpful; otherwise a sans-serif font is selected as a last
+    resort.*/
+    font-family: 'GFS Didot', 'Palatino Linotype', 'GFS Neohellenic', 'Gentium', serif;
+}
+
+.subheading h2 {
+    font-family: 'Open Sans', sans-serif;
 }
