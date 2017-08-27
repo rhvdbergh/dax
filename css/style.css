@@ -1,16 +1,16 @@
 * {
     box-sizing: border-box;
-    background-color: rgba(181, 170, 157, 1);
+    background-color: rgba(208, 204, 208, 1);
     font-family: 'Open Sans';
 }
 
 
 /*Color palette for Dax website:
-color1: rgba(78, 81, 102, 1);
-color2: rgba(124, 144, 160, 1);
-color3: rgba(181, 170, 157, 1);
-color4: rgba(185, 183, 167, 1);
-color5: rgba(116, 114, 116, 1);
+color1: rgba(208, 204, 208, 1);
+color2: rgba(251, 252, 255, 1);
+color3: rgba(239, 198, 155, 1);
+color4: rgba(28, 110, 140, 1);
+color5: rgba(39, 65, 86, 1);
 */
 
 .container {}
@@ -28,7 +28,7 @@ color5: rgba(116, 114, 116, 1);
 
 .subheading h2 {
     font-size: 1.5rem;
-    color: rgba(78, 81, 102, 1);
+    color: rgba(39, 65, 86, 1);
     font-family: 'Open Sans', sans-serif;
     text-align: center;
 }
