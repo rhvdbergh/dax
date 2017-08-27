@@ -1,13 +1,13 @@
 * {
     box-sizing: border-box;
     background-color: #83b0c4;
+    font-family: 'GFS Neohellenic';
 }
 
 .container {}
 
 .heading {
-    font-size: 2rem;
-    font-family: 'GFS Neohellenic', Palatino, sans-serif;
+    font-size: 80px;
+    font-family: 'Sofia', 'GFS Didot', 'GFS Neohellenic', serif;
     clear: both;
-
 }
