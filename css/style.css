@@ -4,3 +4,10 @@
 }
 
 .container {}
+
+.heading {
+    font-size: 2rem;
+    font-family: 'GFS Neohellenic', Palatino, sans-serif;
+    clear: both;
+
+}
