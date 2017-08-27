@@ -1,19 +1,34 @@
 * {
     box-sizing: border-box;
-    background-color: #83b0c4;
-    font-family: 'GFS Neohellenic';
+    background-color: rgba(181, 170, 157, 1);
+    font-family: 'Open Sans';
 }
+
+
+/*Color palette for Dax website:
+color1: rgba(78, 81, 102, 1);
+color2: rgba(124, 144, 160, 1);
+color3: rgba(181, 170, 157, 1);
+color4: rgba(185, 183, 167, 1);
+color5: rgba(116, 114, 116, 1);
+*/
 
 .container {}
 
-h1 {
+.heading h1 {
+    font-size: 3rem;
+    color: rgba(78, 81, 102, 1);
     /*Font encoding presents a problem; in Palatino Linotype is complete for Greek polytonic fonts
     in Unicode. In case Palatino Linotype fails, the Google Fonts provide backup (but doesn't seem 
     to display well. Gentium might be helpful; otherwise a sans-serif font is selected as a last
     resort.*/
-    font-family: 'GFS Didot', 'Palatino Linotype', 'GFS Neohellenic', 'Gentium', serif;
+    font-family: 'Baloo Bhaijaan', 'GFS Didot', 'Palatino Linotype', 'GFS Neohellenic', 'Gentium', serif;
+    text-align: center;
 }
 
 .subheading h2 {
+    font-size: 1.5rem;
+    color: rgba(78, 81, 102, 1);
     font-family: 'Open Sans', sans-serif;
+    text-align: center;
 }
