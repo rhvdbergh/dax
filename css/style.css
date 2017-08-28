@@ -1,23 +1,23 @@
-* {
-    box-sizing: border-box;
-    background-color: rgba(208, 204, 208, 1);
-    font-family: 'Open Sans';
+:root {
+    --background-color: rgba(208, 204, 208, 1);
+    var-color2: rgba(251, 252, 255, 1);;
+    var-color3: rgba(239, 198, 155, 1);
+    --navbar-color: rgba(28, 110, 140, 1);
+    --main-font-color: rgba(39, 65, 86, 1);
+    
 }
 
-
-/*Color palette for Dax website:
-color1: rgba(208, 204, 208, 1);
-color2: rgba(251, 252, 255, 1);
-color3: rgba(239, 198, 155, 1);
-color4: rgba(28, 110, 140, 1);
-color5: rgba(39, 65, 86, 1);
-*/
+* {
+    box-sizing: border-box;
+    background-color: var(--background-color);
+    font-family: 'Open Sans';
+}
 
 .container {}
 
 .heading h1 {
     font-size: 3rem;
-    color: rgba(78, 81, 102, 1);
+    color: var(--main-font-color);
     /*Font encoding presents a problem; in Palatino Linotype is complete for Greek polytonic fonts
     in Unicode. In case Palatino Linotype fails, the Google Fonts provide backup (but doesn't seem 
     to display well. Gentium might be helpful; otherwise a sans-serif font is selected as a last
@@ -28,7 +28,7 @@ color5: rgba(39, 65, 86, 1);
 
 .subheading h2 {
     font-size: 1.5rem;
-    color: rgba(39, 65, 86, 1);
+    color: var(--main-font-color);
     font-family: 'Open Sans', sans-serif;
     text-align: center;
 }
