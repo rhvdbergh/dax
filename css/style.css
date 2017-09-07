@@ -86,3 +86,14 @@ button:hover {
     width: 400px;
     height: 250px;
 }
+
+.add_word_container {
+    position: absolute;
+    margin: auto;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    width: 400px;
+    height: 250px;
+}
