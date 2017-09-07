@@ -8,6 +8,21 @@ http.createServer(function(req, res) {
     // mainly for debugging purposes, file requests are logged to the console
     console.log("File request made for: " + req.url);
 
+    // test if the root domain was selected, or index without its extension was entered
+    // if the above is true, return index.html
+    if (req.url === "/" || req.url === "/index") {
+        fs.readFile("index.html", function(err, data) {
+            if (err) {
+                res.writeHead(404, { 'content-type': 'text/html' });
+                return res.end("404 not found");
+            };
+            //if file is found, return
+            res.writeHead(200, { 'content-type': 'text/html' });
+            res.write(data);
+            return res.end();
+        });
+    }
+
     if (req.url.indexOf('.html') != -1) { //test to see if file has .html extension
         //__dirname returns the root directory
         fs.readFile(__dirname + req.url, function(err, data) {
