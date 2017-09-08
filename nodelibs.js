@@ -15,12 +15,20 @@ con.connect(function(err) {
     console.log("Connected to MySQL.");
 });
 
+// create a temp_database if it doesn't exist
+con.query("CREATE DATABASE IF NOT EXISTS temp_database", function(err, result) {
+    if (err) throw err;
+    console.log("Database created or opened.")
+});
+
 // function as a file server on localhost:8080
 // the file server will handle MySQL too
 http.createServer(function(req, res) {
 
-    // mainly for debugging purposes, file requests are logged to the console
-    console.log("File request made for: " + req.url);
+    // mainly for debugging purposes, requests are logged to the console
+    console.log("Client made request for: " + req.url);
+
+    // File handling
 
     // test if the root domain was selected, or index without its extension was entered
     // if the above is true, return index.html
@@ -37,15 +45,24 @@ http.createServer(function(req, res) {
         });
     }
 
-    if (req.url.indexOf("\?") != -1) { // test to see if data is a query (submitted through a form)
+    // MySQL query handling
+    // test to see if data is a query (submitted through a form)
+
+    if (req.url.indexOf("\?") != -1) {
         var q = url.parse(req.url, true);
 
         // since this was a query, qdata will hold the data submitted as an object
         // each element of the query is accessible through q.element
         var qdata = q.query;
 
+        // for debugging
         console.log("---> Data submitted through form: " + req.url);
         console.log(qdata);
+
+        // Add word to MySQL table
+
+
+
         return;
     }
 
