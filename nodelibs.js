@@ -15,10 +15,21 @@ con.connect(function(err) {
     console.log("Connected to MySQL.");
 });
 
-// create a temp_database if it doesn't exist
+// create a temp_database if it doesn't exist, then select it
 con.query("CREATE DATABASE IF NOT EXISTS temp_database", function(err, result) {
     if (err) throw err;
-    console.log("Database created or opened.")
+    console.log("Database temp_database exists.");
+});
+
+con.query("USE temp_database", function(err, result) {
+    if (err) throw err;
+    console.log("Database temp_database selected for use.");
+});
+
+// create a words table if it doesn't exist
+con.query("CREATE TABLE IF NOT EXISTS words (id INT NOT NULL AUTO_INCREMENT, front TINYTEXT, back TINYTEXT, timestamp TINYTEXT, PRIMARY KEY (id))", function(err, result) {
+    if (err) throw err;
+    console.log("Table words exists.");
 });
 
 // function as a file server on localhost:8080
@@ -57,14 +68,18 @@ http.createServer(function(req, res) {
 
         // for debugging
         console.log("---> Data submitted through form: " + req.url);
-        console.log(qdata);
 
         // Add word to MySQL table
-
-
+        var sql = "INSERT INTO words (front, back, timestamp) VALUES ('" + qdata.front_text + "', '" + qdata.back_text + "', '" + Date.now().toString() + "')";
+        con.query(sql, function(err, result) {
+            if (err) throw err;
+            console.log("MySQL command: " + sql);
+        });
 
         return;
     }
+
+    // more file handling
 
     if (req.url.indexOf('.html') != -1) { // test to see if file has .html extension
         //__dirname returns the root directory
