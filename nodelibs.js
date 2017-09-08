@@ -44,9 +44,8 @@ http.createServer(function(req, res) {
         // each element of the query is accessible through q.element
         var qdata = q.query;
 
-        // test if 
-
         console.log("---> Data submitted through form: " + req.url);
+        console.log(qdata);
         return;
     }
 
