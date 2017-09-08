@@ -16,14 +16,27 @@ http.createServer(function(req, res) {
                 res.writeHead(404, { 'content-type': 'text/html' });
                 return res.end("404 not found");
             };
-            //if file is found, return
+            //if file is found, return:
             res.writeHead(200, { 'content-type': 'text/html' });
             res.write(data);
             return res.end();
         });
     }
 
-    if (req.url.indexOf('.html') != -1) { //test to see if file has .html extension
+    if (req.url.indexOf("\?") != -1) { // test to see if data is a query (submitted through a form)
+        var q = url.parse(req.url, true);
+
+        // since this was a query, qdata will hold the data submitted as an object
+        // each element of the query is accessible through q.element
+        var qdata = q.query;
+
+        // test if 
+
+        console.log("---> Data submitted through form: " + req.url);
+        return;
+    }
+
+    if (req.url.indexOf('.html') != -1) { // test to see if file has .html extension
         //__dirname returns the root directory
         fs.readFile(__dirname + req.url, function(err, data) {
             if (err) {
@@ -39,7 +52,6 @@ http.createServer(function(req, res) {
 
     if (req.url.indexOf('.css') != -1) { //test to see if file has .css extension
         fs.readFile(__dirname + req.url, function(err, data) {
-
             if (err) {
                 res.writeHead(404, { 'content-type': 'text/html' });
                 return res.end("404 not found");
@@ -53,7 +65,6 @@ http.createServer(function(req, res) {
 
     if (req.url.indexOf('.js') != -1) { //test to see if file has .js extension
         fs.readFile(__dirname + req.url, function(err, data) {
-
             if (err) {
                 res.writeHead(404, { 'content-type': 'text/html' });
                 return res.end("404 not found");
