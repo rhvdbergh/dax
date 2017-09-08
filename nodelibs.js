@@ -1,8 +1,22 @@
-//function as a file server on localhost:8080
 var http = require('http');
 var fs = require('fs');
 var url = require('url');
+var mysql = require('mysql');
 
+// Create connection to MySQL database;
+var con = mysql.createConnection({
+    host: "localhost",
+    user: "root",
+    password: "generic"
+});
+
+con.connect(function(err) {
+    if (err) throw err;
+    console.log("Connected to MySQL.");
+});
+
+// function as a file server on localhost:8080
+// the file server will handle MySQL too
 http.createServer(function(req, res) {
 
     // mainly for debugging purposes, file requests are logged to the console
@@ -77,20 +91,3 @@ http.createServer(function(req, res) {
     }
 
 }).listen(8080);
-
-
-// Create connection to MySQL database;
-/*
-var mysql = require('mysql');
-
-var con = mysql.createConnection({
-    host: "localhost",
-    user: "root",
-    password: "generic"
-});
-
-con.connect(function(err) {
-    if (err) throw err;
-    console.log("Connected to MySQL.");
-});
-*/
