@@ -10,6 +10,8 @@ var con = mysql.createConnection({
     password: "generic"
 });
 
+console.log("Current time is: " + (Math.round(Date.now() / 1000)) + " in seconds from Unix epoch.");
+
 con.connect(function(err) {
     if (err) throw err;
     console.log("Connected to MySQL.");
@@ -122,3 +124,17 @@ http.createServer(function(req, res) {
     }
 
 }).listen(8080);
+
+
+//////////// Time calculation /////////////////
+// The time needs to be calculated from when the code was last learned
+// The time used is a Unix epoch timestamp
+// Cards need to be reviewed in:
+// 1 day (86400 seconds)
+// 3 days (259200 seconds)
+// 7 days (604800 seconds)
+// 14 days (1209600 seconds)
+// 30 days (2592000 seconds)
+// 90 days (7776000 seconds)
+// 1 year (31536000 seconds)
+// 3 years (94608000 seconds)
