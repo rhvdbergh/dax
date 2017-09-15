@@ -2,6 +2,7 @@ var http = require('http');
 var fs = require('fs');
 var url = require('url');
 var mysql = require('mysql');
+var qs = require('querystring');
 
 // Create connection to MySQL database;
 var con = mysql.createConnection({
@@ -39,19 +40,40 @@ con.query("CREATE TABLE IF NOT EXISTS words (id INT NOT NULL AUTO_INCREMENT, fro
 http.createServer(function(req, res) {
 
     // mainly for debugging purposes, requests are logged to the console
-    console.log("Client made request for: " + req.url);
+    console.log("Client made request for: " + req.url + " Request method was: " + req.method);
 
     // File handling
 
-    console.log(req.method);
     // test if method used is post
-    if (req.method == "POST") {
+    if (req.method === "POST") {
         fs.readFile("index.html", function(err, data) {
             if (err) {
                 res.writeHead(404, { 'content-type': 'text/html' });
                 return res.end("404 not found");
             };
-            //if file is found, return:
+
+                console.log("Will now write to MySQL database");
+                var body = '';
+                
+                // set the values of body equal to the data of the POST received
+                req.on('data', function (data) {
+                    body += data;
+                }); 
+
+                // parse body data and extract text fields         
+                req.on('end', function() {
+                    var post = qs.parse(body);
+                    console.log("Front text is: " + post.front_text);
+                    console.log("Back text is: " + post.back_text);
+
+                    // MySQL query handling
+                    var sql = "INSERT INTO words (front, back, batch, timestamp) VALUES ('" + post.front_text + "', '" + post.back_text + "', " + "0, '" + (Math.round(Date.now() / 1000)).toString() + "')";
+                    con.query(sql, function(err, result) {
+                        if (err) throw err;
+                        console.log("MySQL command: " + sql);
+                    });
+                });
+            // return the user to the web page selected above (index.html):
             res.writeHead(200, { 'content-type': 'text/html' });
             res.write(data);
             return res.end();
@@ -61,7 +83,7 @@ http.createServer(function(req, res) {
 
     // test if the root domain was selected, or index without its extension was entered
     // if the above is true, return index.html
-    if (req.url === "/" || req.url === "/index") {
+    if ((req.url === "/" || req.url === "/index") && req.method === "GET" ) {
         fs.readFile("index.html", function(err, data) {
             if (err) {
                 res.writeHead(404, { 'content-type': 'text/html' });
@@ -74,32 +96,7 @@ http.createServer(function(req, res) {
         });
     }
 
-    // MySQL query handling
-    // test to see if data is a query (submitted through a form)
-
-    if (req.url.indexOf("\?") != -1) {
-        var q = url.parse(req.url, true);
-
-        // since this was a query, qdata will hold the data submitted as an object
-        // each element of the query is accessible through q.element
-        var qdata = q.query;
-
-        // for debugging
-        console.log("---> Data submitted through form: " + req.url);
-
-        // Add word to MySQL table
-        var sql = "INSERT INTO words (front, back, batch, timestamp) VALUES ('" + qdata.front_text + "', '" + qdata.back_text + "', " + "0, '" + (Math.round(Date.now() / 1000)).toString() + "')";
-        con.query(sql, function(err, result) {
-            if (err) throw err;
-            console.log("MySQL command: " + sql);
-        });
-
-        return res.end();
-    }
-
-    // more file handling
-
-    if (req.url.indexOf('.html') != -1) { // test to see if file has .html extension
+    if ((req.url.indexOf('.html') != -1) && req.method === "GET") { // test to see if file has .html extension
         //__dirname returns the root directory
         fs.readFile(__dirname + req.url, function(err, data) {
             if (err) {
@@ -113,7 +110,7 @@ http.createServer(function(req, res) {
         });
     }
 
-    if (req.url.indexOf('.css') != -1) { //test to see if file has .css extension
+    if ((req.url.indexOf('.css') != -1) && req.method === "GET") { //test to see if file has .css extension
         fs.readFile(__dirname + req.url, function(err, data) {
             if (err) {
                 res.writeHead(404, { 'content-type': 'text/html' });
@@ -126,7 +123,7 @@ http.createServer(function(req, res) {
         });
     }
 
-    if (req.url.indexOf('.js') != -1) { //test to see if file has .js extension
+    if ((req.url.indexOf('.js') != -1) && req.method === "GET") { //test to see if file has .js extension
         fs.readFile(__dirname + req.url, function(err, data) {
             if (err) {
                 res.writeHead(404, { 'content-type': 'text/html' });
