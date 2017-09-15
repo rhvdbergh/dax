@@ -43,8 +43,21 @@ http.createServer(function(req, res) {
 
     // File handling
 
-    // test if method used is post
     console.log(req.method);
+    // test if method used is post
+    if (req.method == "POST") {
+        fs.readFile("index.html", function(err, data) {
+            if (err) {
+                res.writeHead(404, { 'content-type': 'text/html' });
+                return res.end("404 not found");
+            };
+            //if file is found, return:
+            res.writeHead(200, { 'content-type': 'text/html' });
+            res.write(data);
+            return res.end();
+        });
+    };
+    
 
     // test if the root domain was selected, or index without its extension was entered
     // if the above is true, return index.html
