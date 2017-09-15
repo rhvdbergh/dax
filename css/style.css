@@ -1,3 +1,13 @@
+/* alternative color scheme:
+
+Wheat: #F5E7A6
+Wheat: #F4EABE
+Dark Olive Green: #322B13
+Tan: #D3C285
+Dim Gray: #847D58
+
+*/
+
 :root {
     --background-color: rgba(208, 204, 208, 1);
     --navbar-text: rgba(251, 252, 255, 1);
