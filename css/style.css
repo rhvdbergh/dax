@@ -6,14 +6,20 @@ Dark Olive Green: #322B13
 Tan: #D3C285
 Dim Gray: #847D58
 
-*/
-
-:root {
     --background-color: rgba(208, 204, 208, 1);
     --navbar-text: rgba(251, 252, 255, 1);
     --active-navbar: rgba(239, 198, 155, 1);
     --navbar-color: rgba(28, 110, 140, 1);
     --main-font-color: rgba(39, 65, 86, 1);
+
+*/
+
+:root {
+    --background-color: #F5E7A6;
+    --navbar-text: #F4EABE;
+    --active-navbar: #D3C285;
+    --navbar-color: #322B13;
+    --main-font-color: #847D58;
 }
 
 * {
