@@ -43,6 +43,9 @@ http.createServer(function(req, res) {
 
     // File handling
 
+    // test if method used is post
+    console.log(req.method);
+
     // test if the root domain was selected, or index without its extension was entered
     // if the above is true, return index.html
     if (req.url === "/" || req.url === "/index") {
