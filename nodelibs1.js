@@ -43,7 +43,7 @@ function buildBatchSQLQuery(myBatch, time) {
     var timeInterval = 0;
 
     switch (myBatch) {
-        case 0: timeInterval = 20; break;
+        case 0: timeInterval = 86400; break;
         case 1: timeInterval = 259200; break;
         case 2: timeInterval = 604800; break;
         case 3: timeInterval = 1209600; break;
