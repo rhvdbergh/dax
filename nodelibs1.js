@@ -43,7 +43,7 @@ function buildBatchSQLQuery(myBatch, time) {
     var timeInterval = 0;
 
     switch (myBatch) {
-        case 0: timeInterval = 86400; break;
+        case 0: timeInterval = 20; break;
         case 1: timeInterval = 259200; break;
         case 2: timeInterval = 604800; break;
         case 3: timeInterval = 1209600; break;
@@ -73,19 +73,17 @@ function buildBatchSQLQuery(myBatch, time) {
 // function to run through the table once and update all the timestamps that are overdue
 function calculateOverdue() {
     currentTime = calculateTimestamp();
-    var sql = "SELECT id FROM words WHERE ";
+    var sql = "UPDATE words SET overdue = 1 WHERE (";
     // loop through batches and build sql query
     for (var i = 0; i < 7; i++) {
-        sql += buildBatchSQLQuery(i, currentTime) + " OR ";
+        sql += buildBatchSQLQuery(i, currentTime) + ") OR (";
     }
-    sql += buildBatchSQLQuery(7, currentTime);
+    // add final line of sql query
+    sql += buildBatchSQLQuery(7, currentTime) + ")";
     console.log("myQuery's sql statement: " + sql);
     con.query(sql, function(err, results, fields) {
         if (err) throw err;
-
-        console.log("Results of my query: ");
-        console.log(JSON.stringify(results));
-        if (JSON.stringify(results) === '[]') { console.log("Nothing matches query")};
+        console.log("Overdue words in table words updated.");
     });
     
 }
@@ -94,6 +92,7 @@ function calculateTimestamp() {
     return Math.round(Date.now() / 1000);
 }
 
+// calculate overdue timestamps and update "overdue" column in MySQL
 calculateOverdue();
 
 // function as a file server on localhost:8080
