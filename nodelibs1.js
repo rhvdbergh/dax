@@ -4,6 +4,10 @@ var url = require('url');
 var mysql = require('mysql');
 var qs = require('querystring');
 
+// current working mysql database and table
+var currentDatabase = "temp_database";
+var currentTable = "words";
+
 // Create connection to MySQL database;
 var con = mysql.createConnection({
     host: "localhost",
@@ -18,23 +22,25 @@ con.connect(function(err) {
     console.log("Connected to MySQL.");
 });
 
-// create a temp_database if it doesn't exist, then select it
-con.query("CREATE DATABASE IF NOT EXISTS temp_database", function(err, result) {
+// create a database if it doesn't exist, then select it
+var sql = "CREATE DATABASE IF NOT EXISTS " + currentDatabase;
+con.query(sql, function(err, result) {
     if (err) throw err;
-    console.log("Database temp_database exists.");
+    console.log("Database " + currentDatabase + " exists.");
 });
 
-con.query("USE temp_database", function(err, result) {
+var sql = "USE " + currentDatabase;
+con.query(sql, function(err, result) {
     if (err) throw err;
-    console.log("Database temp_database selected for use.");
+    console.log("Database " + currentDatabase + " selected for use.");
 });
 
-// create a words table if it doesn't exist
+// create a table if it doesn't exist
 // overdue column functions as a boolean column where 0 = false, 1 = true;
-
-con.query("CREATE TABLE IF NOT EXISTS words (id INT NOT NULL AUTO_INCREMENT, front TINYTEXT, back TINYTEXT, batch TINYINT DEFAULT 0, timestamp INT, overdue INT DEFAULT 0, PRIMARY KEY (id))", function(err, result) {
+var sql = "CREATE TABLE IF NOT EXISTS " + currentTable + " (id INT NOT NULL AUTO_INCREMENT, front TINYTEXT, back TINYTEXT, batch TINYINT DEFAULT 0, timestamp INT, overdue INT DEFAULT 0, PRIMARY KEY (id))"
+con.query(sql, function(err, result) {
     if (err) throw err;
-    console.log("Table words exists.");
+    console.log("Table " + currentTable + " exists.");
 });
 
 // helper-function for building sql string for calculating overdue timestamps
@@ -73,17 +79,17 @@ function buildBatchSQLQuery(myBatch, time) {
 // function to run through the table once and update all the timestamps that are overdue
 function calculateOverdue() {
     currentTime = calculateTimestamp();
-    var sql = "UPDATE words SET overdue = 1 WHERE (";
+    var sql = "UPDATE " + currentTable + " SET overdue = 1 WHERE (";
     // loop through batches and build sql query
     for (var i = 0; i < 7; i++) {
         sql += buildBatchSQLQuery(i, currentTime) + ") OR (";
     }
     // add final line of sql query
     sql += buildBatchSQLQuery(7, currentTime) + ")";
-    
+
     con.query(sql, function(err, results, fields) {
         if (err) throw err;
-        console.log("Overdue words in table words updated.");
+        console.log("Overdue words in table " + currentTable + " updated.");
     });
     
 }
@@ -100,12 +106,12 @@ calculateOverdue();
 function getNumWords() {
     var numWords = 0;
 
-    var sql = "SELECT table_rows FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = 'temp_database' AND table_name = 'words'";
+    var sql = "SELECT table_rows FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = '" + currentDatabase + "' AND table_name = '" + currentTable + "'";
 
     con.query(sql, function (err, result) {
         if (err) throw err;
 
-        console.log("Number of words in words table: " + result[0].table_rows);
+        console.log("Number of words in " + currentTable + " table: " + result[0].table_rows);
         numWords = result[0].table_rows;
         
         });
@@ -146,7 +152,7 @@ http.createServer(function(req, res) {
                     console.log("Back text is: " + post.back_text);
 
                     // MySQL query handling
-                    var sql = "INSERT INTO words (front, back, timestamp) VALUES ('" + post.front_text + "', '" + post.back_text + "', '" + calculateTimestamp().toString() + "')";
+                    var sql = "INSERT INTO " + currentTable + " (front, back, timestamp) VALUES ('" + post.front_text + "', '" + post.back_text + "', '" + calculateTimestamp().toString() + "')";
                     con.query(sql, function(err, result) {
                         if (err) throw err;
                         console.log("MySQL command: " + sql);
