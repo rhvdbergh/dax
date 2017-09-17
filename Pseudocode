@@ -1,0 +1,8 @@
+Pseudocode for reviewing words
+
+Select from table on server side one random word that needs reviewing
+Return word to client side
+On client side, present front of card
+On click, reveal back of card to user
+User selects yes or no at question "Did you know the card?"
+If user answers no, move card to 

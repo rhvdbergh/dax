@@ -11,7 +11,7 @@ var con = mysql.createConnection({
     password: "generic"
 });
 
-console.log("Current time is: " + (Math.round(Date.now() / 1000)) + " in seconds from Unix epoch.");
+console.log("Current time is: " + calculateTimestamp() + " in seconds from Unix epoch.");
 
 con.connect(function(err) {
     if (err) throw err;
@@ -30,10 +30,71 @@ con.query("USE temp_database", function(err, result) {
 });
 
 // create a words table if it doesn't exist
-con.query("CREATE TABLE IF NOT EXISTS words (id INT NOT NULL AUTO_INCREMENT, front TINYTEXT, back TINYTEXT, batch TINYINT, timestamp INT, PRIMARY KEY (id))", function(err, result) {
+// overdue column functions as a boolean column where 0 = false, 1 = true;
+
+con.query("CREATE TABLE IF NOT EXISTS words (id INT NOT NULL AUTO_INCREMENT, front TINYTEXT, back TINYTEXT, batch TINYINT DEFAULT 0, timestamp INT, overdue INT DEFAULT 0, PRIMARY KEY (id))", function(err, result) {
     if (err) throw err;
     console.log("Table words exists.");
 });
+
+// helper-function for building sql string for calculating overdue timestamps
+function buildBatchSQLQuery(myBatch, time) {
+
+    var timeInterval = 0;
+
+    switch (myBatch) {
+        case 0: timeInterval = 86400; break;
+        case 1: timeInterval = 259200; break;
+        case 2: timeInterval = 604800; break;
+        case 3: timeInterval = 1209600; break;
+        case 4: timeInterval = 2592000; break;
+        case 5: timeInterval = 7776000; break;
+        case 6: timeInterval = 31536000; break;
+        case 7: timeInterval = 94608000; break;
+        default: 0;
+    }   
+
+    return "(batch = " + myBatch + ") AND (" + time + " - timestamp > " + timeInterval + ")";
+}
+
+//////////// Time calculation /////////////////
+// The time needs to be calculated from when the word was last learned
+// The time used is a Unix epoch timestamp (in seconds)
+// Cards need to be reviewed in:
+// 1 day (86400 seconds)
+// 3 days (259200 seconds)
+// 7 days (604800 seconds)
+// 14 days (1209600 seconds)
+// 30 days (2592000 seconds)
+// 90 days (7776000 seconds)
+// 1 year (31536000 seconds)
+// 3 years (94608000 seconds)
+
+// function to run through the table once and update all the timestamps that are overdue
+function calculateOverdue() {
+    currentTime = calculateTimestamp();
+    var sql = "SELECT id FROM words WHERE ";
+    // loop through batches and build sql query
+    for (var i = 0; i < 7; i++) {
+        sql += buildBatchSQLQuery(i, currentTime) + " OR ";
+    }
+    sql += buildBatchSQLQuery(7, currentTime);
+    console.log("myQuery's sql statement: " + sql);
+    con.query(sql, function(err, results, fields) {
+        if (err) throw err;
+
+        console.log("Results of my query: ");
+        console.log(JSON.stringify(results));
+        if (JSON.stringify(results) === '[]') { console.log("Nothing matches query")};
+    });
+    
+}
+
+function calculateTimestamp() {
+    return Math.round(Date.now() / 1000);
+}
+
+calculateOverdue();
 
 // function as a file server on localhost:8080
 // the file server will handle MySQL too
@@ -67,7 +128,7 @@ http.createServer(function(req, res) {
                     console.log("Back text is: " + post.back_text);
 
                     // MySQL query handling
-                    var sql = "INSERT INTO words (front, back, batch, timestamp) VALUES ('" + post.front_text + "', '" + post.back_text + "', " + "0, '" + (Math.round(Date.now() / 1000)).toString() + "')";
+                    var sql = "INSERT INTO words (front, back, timestamp) VALUES ('" + post.front_text + "', '" + post.back_text + "', '" + calculateTimestamp().toString() + "')";
                     con.query(sql, function(err, result) {
                         if (err) throw err;
                         console.log("MySQL command: " + sql);
@@ -139,15 +200,3 @@ http.createServer(function(req, res) {
 }).listen(8080);
 
 
-//////////// Time calculation /////////////////
-// The time needs to be calculated from when the code was last learned
-// The time used is a Unix epoch timestamp
-// Cards need to be reviewed in:
-// 1 day (86400 seconds)
-// 3 days (259200 seconds)
-// 7 days (604800 seconds)
-// 14 days (1209600 seconds)
-// 30 days (2592000 seconds)
-// 90 days (7776000 seconds)
-// 1 year (31536000 seconds)
-// 3 years (94608000 seconds)
