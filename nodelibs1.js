@@ -80,7 +80,7 @@ function calculateOverdue() {
     }
     // add final line of sql query
     sql += buildBatchSQLQuery(7, currentTime) + ")";
-    console.log("myQuery's sql statement: " + sql);
+    
     con.query(sql, function(err, results, fields) {
         if (err) throw err;
         console.log("Overdue words in table words updated.");
@@ -94,6 +94,25 @@ function calculateTimestamp() {
 
 // calculate overdue timestamps and update "overdue" column in MySQL
 calculateOverdue();
+
+// this function returns the number of words in the table without having to count
+// rather, the information is retrieved once from the INFORMATION_SCHEMA.TABLES table
+function getNumWords() {
+    var numWords = 0;
+
+    var sql = "SELECT table_rows FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = 'temp_database' AND table_name = 'words'";
+
+    con.query(sql, function (err, result) {
+        if (err) throw err;
+
+        console.log("Number of words in words table: " + result[0].table_rows);
+        numWords = result[0].table_rows;
+        
+        });
+    return numWords;
+}
+
+console.log(getNumWords());
 
 // function as a file server on localhost:8080
 // the file server will handle MySQL too
