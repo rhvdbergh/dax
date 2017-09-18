@@ -88,22 +88,27 @@ button {
     border-radius: 5px;
 }
 
+.review_word_front, .review_word_back {
+    background-color: var(--navbar-color);
+    color: var(--navbar-text);
+    padding: 12px 14px;
+    margin: 8px 0px;
+    border: none;
+    width: 100%;
+    font-family: 'Open Sans', sans-serif;
+    font-size: 1.5em;
+    border-radius: 5px;
+}
+
+.review_word_back {
+    cursor: pointer;
+}
+
 button:hover {
     background-color: var(--active-navbar);
 }
 
-.login_container {
-    position: absolute;
-    margin: auto;
-    top: 0;
-    right: 0;
-    bottom: 0;
-    left: 0;
-    width: 400px;
-    height: 250px;
-}
-
-.add_word_container {
+.login_container, .add_word_container, .review_box {
     position: absolute;
     margin: auto;
     top: 0;
