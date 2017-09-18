@@ -118,57 +118,15 @@ function getNumWords() {
     return numWords;
 }
 
-console.log(getNumWords());
+getNumWords();
 
 // this function retrieves a random overdue card from the database to review
 function getRandomOverdueCard() {
-    // first check to see if there are any overdue cards
-    // mysql query will seek overdue cards and stop whenever the first overdue card is found
-    var sql = "SELECT id FROM " + currentTable + " WHERE overdue = 1 LIMIT 1";
+    var sql = "SELECT * FROM " + currentTable + " WHERE overdue = 1 ORDER BY RAND() LIMIT 1";
     con.query(sql, function(err, result) {
         if (err) throw err;
-
-        console.log("If there are any overdue cards, an object should be printed here: " + JSON.stringify(result));
-        if (!(JSON.stringify(result) === '[]')) { // not an empty object, so at least one overdue card
-            console.log("There is at least one overdue card");
-            var highestID = 0;            
-            var sql = "SELECT MAX(id) FROM " + currentTable;
-            con.query(sql, function(err, result) {
-                if (err) throw err;
-
-                highestID = result[0]["MAX(id)"];
-
-                // highestID defines the range, but the random number returned could be the id of a deleted card
-                var randID = Math.ceil(Math.random()*highestID); 
-                console.log("Random position to start id checking is: " + randID);
-                // because the card could already be deleted, one should first check if the card still exists
-                // if the card doesn't exist, or is not overdue, step over to the next card until a card is found
-                // which is overdue. If not card is found when highestID is reached, start from 1 onwards
-                var cardFound = false;
-                while (!cardFound) {
-                    sql = "SELECT * FROM " + currentTable + " WHERE id = " + randID;
-                    con.query(sql, function(err, result) {
-                        if (err) throw err;
-
-                        if (!(JSON.stringify(result) === "[]")) { // test to see if object is empty
-                            return result;
-                            cardFound = true;
-                        } else {
-                            randID++; // there was no card, so try next id
-                            if (randID > highestID) { // gone past highest id, start from 1;
-                                randID = 1;
-                            }
-
-                        }
-
-                    })
-                }
-
-            })
-        } else {
-            console.log("There aren't any overdue cards");
-            return NULL;
-        }
+        console.log("Your random card is: " + JSON.stringify(result));
+        return result;
     });
 }
 
