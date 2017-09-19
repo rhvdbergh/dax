@@ -49,16 +49,33 @@ function buildBatchSQLQuery(myBatch, time) {
     var timeInterval = 0;
 
     switch (myBatch) {
-        case 0: timeInterval = 86400; break;
-        case 1: timeInterval = 259200; break;
-        case 2: timeInterval = 604800; break;
-        case 3: timeInterval = 1209600; break;
-        case 4: timeInterval = 2592000; break;
-        case 5: timeInterval = 7776000; break;
-        case 6: timeInterval = 31536000; break;
-        case 7: timeInterval = 94608000; break;
-        default: 0;
-    }   
+        case 0:
+            timeInterval = 86400;
+            break;
+        case 1:
+            timeInterval = 259200;
+            break;
+        case 2:
+            timeInterval = 604800;
+            break;
+        case 3:
+            timeInterval = 1209600;
+            break;
+        case 4:
+            timeInterval = 2592000;
+            break;
+        case 5:
+            timeInterval = 7776000;
+            break;
+        case 6:
+            timeInterval = 31536000;
+            break;
+        case 7:
+            timeInterval = 94608000;
+            break;
+        default:
+            0;
+    }
 
     return "(batch = " + myBatch + ") AND (" + time + " - timestamp > " + timeInterval + ")";
 }
@@ -91,7 +108,7 @@ function calculateOverdue() {
         if (err) throw err;
         console.log("Overdue words in table " + currentTable + " updated.");
     });
-    
+
 }
 
 function calculateTimestamp() {
@@ -108,29 +125,17 @@ function getNumWords() {
 
     var sql = "SELECT table_rows FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = '" + currentDatabase + "' AND table_name = '" + currentTable + "'";
 
-    con.query(sql, function (err, result) {
+    con.query(sql, function(err, result) {
         if (err) throw err;
 
         console.log("Number of words in " + currentTable + " table: " + result[0].table_rows);
         numWords = result[0].table_rows;
-        
-        });
+
+    });
     return numWords;
 }
 
 getNumWords();
-
-// this function retrieves a random overdue card from the database to review
-function getRandomOverdueCard() {
-    var sql = "SELECT * FROM " + currentTable + " WHERE overdue = 1 ORDER BY RAND() LIMIT 1";
-    con.query(sql, function(err, result) {
-        if (err) throw err;
-        console.log("Your random card is: " + JSON.stringify(result));
-        return result;
-    });
-}
-
-getRandomOverdueCard();
 
 // act as a file server on localhost:8080
 // the file server will handle MySQL too
@@ -138,6 +143,31 @@ http.createServer(function(req, res) {
 
     // mainly for debugging purposes, requests are logged to the console
     console.log("Client made request for: " + req.url + " Request method was: " + req.method);
+
+    function sendRandomOverdueCard(myCard) {
+        res.writeHead(200, { 'Content-Type': 'text/plain' });
+        console.log("myCard within send: " + myCard);
+        res.write(JSON.stringify(myCard));
+        return res.end();
+    }
+
+    // this function retrieves a random overdue card from the database to review
+    function getRandomOverdueCard(callback) {
+        var sql = "SELECT * FROM " + currentTable + " WHERE overdue = 1 ORDER BY RAND() LIMIT 1";
+        con.query(sql, function(err, result) {
+            if (err) throw err;
+            console.log("Your random card is: " + JSON.stringify(result));
+            callback(result);
+        });
+    }
+
+    // if request is for a new word card, send card as JSON 
+    if ((req.url.indexOf('?') != -1) && req.method === "GET") { // test if query was submitted
+
+        console.log("request received");
+        getRandomOverdueCard(sendRandomOverdueCard);
+
+    }
 
     // File handling
 
@@ -149,38 +179,38 @@ http.createServer(function(req, res) {
                 return res.end("404 not found");
             };
 
-                console.log("Will now write to MySQL database");
-                var body = '';
-                
-                // set the values of body equal to the data of the POST received
-                req.on('data', function (data) {
-                    body += data;
-                }); 
+            console.log("Will now write to MySQL database");
+            var body = '';
 
-                // parse body data and extract text fields         
-                req.on('end', function() {
-                    var post = qs.parse(body);
-                    console.log("Front text is: " + post.front_text);
-                    console.log("Back text is: " + post.back_text);
+            // set the values of body equal to the data of the POST received
+            req.on('data', function(data) {
+                body += data;
+            });
 
-                    // MySQL query handling
-                    var sql = "INSERT INTO " + currentTable + " (front, back, timestamp) VALUES ('" + post.front_text + "', '" + post.back_text + "', '" + calculateTimestamp().toString() + "')";
-                    con.query(sql, function(err, result) {
-                        if (err) throw err;
-                        console.log("MySQL command: " + sql);
-                    });
+            // parse body data and extract text fields         
+            req.on('end', function() {
+                var post = qs.parse(body);
+                console.log("Front text is: " + post.front_text);
+                console.log("Back text is: " + post.back_text);
+
+                // MySQL query handling
+                var sql = "INSERT INTO " + currentTable + " (front, back, timestamp) VALUES ('" + post.front_text + "', '" + post.back_text + "', '" + calculateTimestamp().toString() + "')";
+                con.query(sql, function(err, result) {
+                    if (err) throw err;
+                    console.log("MySQL command: " + sql);
                 });
+            });
             // return the user to the web page selected above (index.html):
             res.writeHead(200, { 'content-type': 'text/html' });
             res.write(data);
             return res.end();
         });
     };
-    
+
 
     // test if the root domain was selected, or index without its extension was entered
     // if the above is true, return index.html
-    if ((req.url === "/" || req.url === "/index") && req.method === "GET" ) {
+    if ((req.url === "/" || req.url === "/index") && req.method === "GET") {
         fs.readFile("index.html", function(err, data) {
             if (err) {
                 res.writeHead(404, { 'content-type': 'text/html' });
@@ -193,7 +223,7 @@ http.createServer(function(req, res) {
         });
     }
 
-    if ((req.url.indexOf('.html') != -1) && req.method === "GET") { // test to see if file has .html extension
+    if ((req.url.indexOf('.html') != -1) && (req.method === "GET") && !(req.url.indexOf('?') != -1)) { // test to see if file has .html extension
         //__dirname returns the root directory
         fs.readFile(__dirname + req.url, function(err, data) {
             if (err) {
@@ -233,6 +263,6 @@ http.createServer(function(req, res) {
         });
     }
 
+
+
 }).listen(8080);
-
-
