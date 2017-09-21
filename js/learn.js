@@ -1,3 +1,5 @@
+var seconds = 0;
+
 $(document).ready(function() {
     // when review.html is loaded, retrieve 
     $.get("?getword", function(data) {
@@ -8,7 +10,17 @@ $(document).ready(function() {
 
         $('.review_word_back').on('click', function() {
             $('.review_word_back').text(jsonObj[0].back);
-        })
+        });
+
+        function timer() {
+            setInterval(function() {
+                seconds++;
+                $('.timerstr').text(Math.floor(seconds / 60) + ":" + (seconds % 60));
+            }, 1000);
+        }
+
+        timer();
+
 
 
         console.log("request data returned");
