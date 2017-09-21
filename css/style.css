@@ -89,8 +89,7 @@ button {
 }
 
 .review_word_front,
-.review_word_back,
-.front_msg {
+.review_word_back {
     background-color: var(--navbar-color);
     color: var(--navbar-text);
     padding: 12px 14px;
@@ -100,9 +99,10 @@ button {
     font-family: 'Open Sans', sans-serif;
     font-size: 1.5em;
     border-radius: 5px;
+    box-sizing: content-box;
 }
 
-.front_msg {
+.review_word_back {
     cursor: pointer;
 }
 
