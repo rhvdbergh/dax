@@ -162,7 +162,7 @@ http.createServer(function(req, res) {
     }
 
     // if request is for a new word card, send card as JSON 
-    if ((req.url.indexOf('?') != -1) && req.method === "GET") { // test if query was submitted
+    if ((req.url.indexOf('?getword') != -1) && req.method === "GET") { // test if query was submitted
 
         console.log("request received");
         getRandomOverdueCard(sendRandomOverdueCard);
