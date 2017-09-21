@@ -121,6 +121,7 @@ calculateOverdue();
 // this function returns the number of words in the table without having to count
 // rather, the information is retrieved once from the INFORMATION_SCHEMA.TABLES table
 function getNumWords() {
+
     var numWords = 0;
 
     var sql = "SELECT table_rows FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = '" + currentDatabase + "' AND table_name = '" + currentTable + "'";
@@ -144,29 +145,29 @@ http.createServer(function(req, res) {
     // mainly for debugging purposes, requests are logged to the console
     console.log("Client made request for: " + req.url + " Request method was: " + req.method);
 
-    function sendRandomOverdueCard(myCard) {
+    function sendRandomOverdueCards(myCards) {
         res.writeHead(200, { 'Content-Type': 'text/plain' });
-        console.log("myCard within send: " + myCard);
-        res.write(JSON.stringify(myCard));
+        console.log("myCards within send: " + myCards);
+        res.write(JSON.stringify(myCards));
         return res.end();
     }
 
     // this function retrieves a random overdue card from the database to review
-    function getRandomOverdueCard(callback) {
-        var sql = "SELECT * FROM " + currentTable + " WHERE overdue = 1 ORDER BY RAND() LIMIT 1";
+    function getRandomOverdueCards(callback) {
+        // if there are less than 20 overdue cards, only the overdue cards will be returned
+        var sql = "SELECT * FROM " + currentTable + " WHERE overdue = 1 ORDER BY RAND() LIMIT 20";
         con.query(sql, function(err, result) {
             if (err) throw err;
-            console.log("Your random card is: " + JSON.stringify(result));
+            console.log("Your random cards are: " + JSON.stringify(result));
             callback(result);
         });
     }
 
-    // if request is for a new word card, send card as JSON 
-    if ((req.url.indexOf('?getword') != -1) && req.method === "GET") { // test if query was submitted
+    // if request is for new word cards, send cards as JSON 
+    if ((req.url.indexOf('?getwords') != -1) && req.method === "GET") { // test if query was submitted
 
         console.log("request received");
-        getRandomOverdueCard(sendRandomOverdueCard);
-
+        getRandomOverdueCards(sendRandomOverdueCards);
     }
 
     // File handling

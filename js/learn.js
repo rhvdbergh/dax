@@ -2,9 +2,10 @@ var seconds = 0;
 
 $(document).ready(function() {
     // when review.html is loaded, retrieve 
-    $.get("?getword", function(data) {
+    $.get("?getwords", function(data) {
         var jsonObj = JSON.parse(data);
 
+        // set up initial cards
         $('.review_word_front').append(jsonObj[0].front);
         $('.review_word_back').append("Click here to reveal card...");
 
@@ -21,9 +22,8 @@ $(document).ready(function() {
 
         timer();
 
-
-
         console.log("request data returned");
         console.log("data is: " + data);
+        console.log("The number of cards returned are: " + jsonObj.length)
     });
 });
