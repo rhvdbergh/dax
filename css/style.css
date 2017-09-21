@@ -88,6 +88,27 @@ button {
     border-radius: 5px;
 }
 
+#yes_btn,
+#no_btn {
+    width: 30%;
+    margin: 10%;
+}
+
+#yes_btn {
+    float: left;
+}
+
+#no_btn {
+    float: right;
+}
+
+.question {
+    clear: both;
+    text-align: center;
+    padding-top: 40px;
+    font-size: 1.3rem;
+}
+
 .review_word_front,
 .review_word_back {
     background-color: var(--navbar-color);
