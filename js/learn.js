@@ -6,12 +6,29 @@ $(document).ready(function() {
     var shortTimeUp = false;
     var cardFlipped = false;
     var decisionMade = false;
-    var shortTimeDuration = 2; // this should be 18, if different changed for debugging purposes
+    var shortTimeDuration = 180; // this should be 18, if different changed for debugging purposes
     var jsonObj;
     var place = 0; // keeps track of which card is currently being learned
 
     function calculateTimestamp() {
         return Math.round(Date.now() / 1000);
+    }
+
+    function getNewWords() {
+        $.get("?getwords", function(data) {
+
+            // save present card, so user does not go out of sync
+            var currentCard = jsonObj[place];
+            jsonObj = JSON.parse(data);
+            // set the current card at the "top of the pile"
+            jsonObj[0] = currentCard;
+
+            place = 0;
+
+            console.log("Request for new data has returned!");
+            console.log("data is: " + data);
+            console.log("The number of cards returned are: " + jsonObj.length);
+        });
     }
 
     function retrieveCards(callback) {
@@ -25,11 +42,22 @@ $(document).ready(function() {
 
             $('.review_word_front').text(jsonObj[place].front);
             $('.review_word_back').text("Click here to reveal card...");
+            $('#yes_btn').addClass('gray_out');
+            $('#no_btn').addClass('gray_out');
 
             $('.review_word_back').on('click', function() {
+
+                // check to see if new words are needed from the server
+                if (place > 18) {
+                    console.log("Space getting tight!");
+                    getNewWords();
+                }
+
                 if (!decisionMade) {
                     $('.review_word_back').text(jsonObj[place].back);
                     cardFlipped = true;
+                    $('#yes_btn').removeClass('gray_out');
+                    $('#no_btn').removeClass('gray_out');
                 }
             });
 
@@ -59,14 +87,17 @@ $(document).ready(function() {
                     decisionMade = false;
                     cardFlipped = false;
 
+                } else {
+                    decisionMade = true;
                 }
 
-
-                decisionMade = true;
+                $('#yes_btn').addClass('gray_out');
+                $('#no_btn').addClass('gray_out');
 
                 // for debugging purposes:
                 console.log("Decision made: yes");
                 console.log("The card has been updated to: " + JSON.stringify(jsonObj[place - 1]) + "at " + shortTimeSeconds + " seconds");
+                console.log("Place: " + place);
             }
         });
 
@@ -89,15 +120,17 @@ $(document).ready(function() {
                     $('.review_word_back').text("Click here to reveal card...");
                     cardFlipped = false;
                     decisionMade = false;
+
+                } else {
+                    decisionMade = true;
                 }
 
-
-                decisionMade = true;
+                $('#yes_btn').addClass('gray_out');
+                $('#no_btn').addClass('gray_out');
 
                 // for debugging purposes:
                 console.log("Decision made: no");
                 console.log("The card has been updated to: " + JSON.stringify(jsonObj[place - 1]) + "at " + shortTimeSeconds + " seconds");
-
             }
         });
     }
