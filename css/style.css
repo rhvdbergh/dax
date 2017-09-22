@@ -131,6 +131,11 @@ button:hover {
     background-color: var(--active-navbar);
 }
 
+button.gray_out {
+    background-color: var(--navbar-color);
+    opacity: 0.5;
+}
+
 .login_container,
 .add_word_container,
 .review_box {
