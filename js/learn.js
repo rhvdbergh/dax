@@ -6,6 +6,10 @@ $(document).ready(function() {
     var jsonObj;
     var place = 0; // keeps track of which card is currently being learned
 
+    function calculateTimestamp() {
+        return Math.round(Date.now() / 1000);
+    }
+
     // when review.html is loaded, retrieve 
     function retrieveCards(callback) {
         $.get("?getwords", function(data) {
@@ -32,6 +36,7 @@ $(document).ready(function() {
         $('#yes_btn').on('click', function() {
             jsonObj[place].batch++;
             jsonObj[place].overdue = 0;
+            jsonObj[place].timestamp = calculateTimestamp().toString();
             $.get("?updatecard" + JSON.stringify(jsonObj[place]));
 
             place++;

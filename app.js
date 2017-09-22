@@ -170,16 +170,30 @@ http.createServer(function(req, res) {
         getRandomOverdueCards(sendRandomOverdueCards);
     }
 
+    function updateCard(card) {
+        console.log("JSON passed to updateCard: " + JSON.stringify(card));
+        sql = "UPDATE " + currentTable + " SET batch = " + card.batch + ", timestamp = " + card.timestamp + ", overdue = " + card.overdue + " WHERE id = " + card.id;
+        con.query(sql, function(err, result) {
+            if (err) throw err;
+            console.log("Card updated!");
+        });
+
+    }
+
     // if there is a request to update a card, do the following:
     if ((req.url.indexOf('?updatecard') != -1) && req.method === "GET") { // test if query was submitted
 
         console.log("Request to update word received; JSON = " + req.url);
         var jsonStart = req.url.indexOf('{');
-        // extract JSON string and remove %22
+        // extract JSON string and change %22 back to "
+        var str_withoutQuote = req.url.substring(jsonStart).replace(/%22/g, '"');
+        // change %20 back to " "
+        str = str_withoutQuote.replace(/%20/g, " ");
+        console.log("JSON string received: " + str);
 
-        var str = req.url.substring(jsonStart).replace(/%22/g, '"');
-        console.log("str: " + str);
-        console.log("JSON retrieved: " + JSON.parse(str));
+        updateCard(JSON.parse(str));
+
+        res.end();
     }
 
     // File handling
