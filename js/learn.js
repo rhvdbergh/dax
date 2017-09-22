@@ -6,7 +6,7 @@ $(document).ready(function() {
     var shortTimeUp = false;
     var cardFlipped = false;
     var decisionMade = false;
-    var shortTimeDuration = 180; // this should be 18, if different changed for debugging purposes
+    var shortTimeDuration = 18; // this should be 18, if different changed for debugging purposes
     var jsonObj;
     var place = 0; // keeps track of which card is currently being learned
 
@@ -42,8 +42,7 @@ $(document).ready(function() {
 
             $('.review_word_front').text(jsonObj[place].front);
             $('.review_word_back').text("Click here to reveal card...");
-            $('#yes_btn').addClass('gray_out');
-            $('#no_btn').addClass('gray_out');
+            $('.review_question').hide();
 
             $('.review_word_back').on('click', function() {
 
@@ -56,8 +55,7 @@ $(document).ready(function() {
                 if (!decisionMade) {
                     $('.review_word_back').text(jsonObj[place].back);
                     cardFlipped = true;
-                    $('#yes_btn').removeClass('gray_out');
-                    $('#no_btn').removeClass('gray_out');
+                    $('.review_question').show();
                 }
             });
 
@@ -91,8 +89,7 @@ $(document).ready(function() {
                     decisionMade = true;
                 }
 
-                $('#yes_btn').addClass('gray_out');
-                $('#no_btn').addClass('gray_out');
+                $('.review_question').hide();
 
                 // for debugging purposes:
                 console.log("Decision made: yes");
@@ -125,8 +122,7 @@ $(document).ready(function() {
                     decisionMade = true;
                 }
 
-                $('#yes_btn').addClass('gray_out');
-                $('#no_btn').addClass('gray_out');
+                $('.review_question').hide();
 
                 // for debugging purposes:
                 console.log("Decision made: no");
