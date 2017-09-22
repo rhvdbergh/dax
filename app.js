@@ -170,6 +170,18 @@ http.createServer(function(req, res) {
         getRandomOverdueCards(sendRandomOverdueCards);
     }
 
+    // if there is a request to update a card, do the following:
+    if ((req.url.indexOf('?updatecard') != -1) && req.method === "GET") { // test if query was submitted
+
+        console.log("Request to update word received; JSON = " + req.url);
+        var jsonStart = req.url.indexOf('{');
+        // extract JSON string and remove %22
+
+        var str = req.url.substring(jsonStart).replace(/%22/g, '"');
+        console.log("str: " + str);
+        console.log("JSON retrieved: " + JSON.parse(str));
+    }
+
     // File handling
 
     // test if method used is post
