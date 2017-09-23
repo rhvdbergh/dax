@@ -13,7 +13,7 @@ $(document).ready(function() {
     }
 
     function getNewWords() {
-        $.get("?getwords", function(data) {
+        $.get("?getoverduewords", function(data) {
 
             // save present card, so user does not go out of sync
             var currentCard = jsonObj[place];
@@ -52,7 +52,7 @@ $(document).ready(function() {
     }
 
     function retrieveCards(callback) {
-        $.get("?getwords", function(data) {
+        $.get("?getoverduewords", function(data) {
             jsonObj = JSON.parse(data);
             console.log("request data returned");
             console.log("data is: " + data);

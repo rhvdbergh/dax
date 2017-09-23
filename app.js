@@ -145,7 +145,7 @@ http.createServer(function(req, res) {
     // mainly for debugging purposes, requests are logged to the console
     console.log("Client made request for: " + req.url + " Request method was: " + req.method);
 
-    function sendRandomOverdueCards(myCards) {
+    function sendCards(myCards) {
         res.writeHead(200, { 'Content-Type': 'text/plain' });
         console.log("myCards within send: " + myCards);
         res.write(JSON.stringify(myCards));
@@ -163,11 +163,27 @@ http.createServer(function(req, res) {
         });
     }
 
+    function getRandomBatch0Cards(callback) {
+        // if there are less than 20 batch 0 cards, only the correct number of cards will be returned
+        var sql = "SELECT * FROM " + currentTable + " WHERE batch = 0 ORDER BY RAND() LIMIT 20";
+        con.query(sql, function(err, result) {
+            if (err) throw err;
+            console.log("Your random cards are: " + JSON.stringify(result));
+            callback(result);
+        });
+    }
+
     // if request is for new word cards, send cards as JSON 
-    if ((req.url.indexOf('?getwords') != -1) && req.method === "GET") { // test if query was submitted
+    if ((req.url.indexOf('?getoverduewords') != -1) && req.method === "GET") { // test if query was submitted
 
         console.log("request received");
-        getRandomOverdueCards(sendRandomOverdueCards);
+        getRandomOverdueCards(sendCards);
+    }
+
+    if ((req.url.indexOf('?getnewwords') != -1) && req.method === "GET") { // test if query was submitted
+
+        console.log("request received");
+        getRandomBatch0Cards(sendCards);
     }
 
     function updateCard(card) {
