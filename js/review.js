@@ -65,9 +65,15 @@ $(document).ready(function() {
             }
 
             // set up initial cards
+            if (jsonObj.length > 0) { // check to see if returned object has at least one card
+                $('.review_word_front').text(jsonObj[place].front);
+                $('.review_word_back').text("Click here to reveal card...");
 
-            $('.review_word_front').text(jsonObj[place].front);
-            $('.review_word_back').text("Click here to reveal card...");
+            } else { // no cards to review!
+                $('.review_word_front').text("All done! No cards to review.");
+                $('.review_word_back').hide();
+
+            }
             $('.review_question').hide();
 
             $('.review_word_back').on('click', function() {
