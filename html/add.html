@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+    <title>VocabSpace - Add Words</title>
+    <link href="https://fonts.googleapis.com/css?family=GFS+Didot|GFS+Neohellenic|Open+Sans|Baloo+Bhaijaan" rel="stylesheet">
+    <link rel="stylesheet" href="../css/style.css">
+
+    <meta charset="utf-8">
+
+</head>
+
+<body>
+
+
+    <div class="container">
+        <div>
+            <ul class="navbar">
+                <li class="home"><a href="../index.html">Home</a></li>
+                <div class="navbar-right">
+                    <li><a href="">About</a></li>
+                    <li><a href="./html/learn.html">Learn</a></li>
+                    <li><a href="./html/review.html">Review</a></li>
+                    <li><a href="">Login / Sign up</a></li>
+                </div>
+            </ul>
+        </div>
+
+        <form id="add_word_form" method="POST">
+            <div class="add_word_container">
+                <input id="front_input" type="text" placeholder="Enter front side" name="front_text" required autofocus>
+                <input id="back_input" type="text" placeholder="Enter back side " name="back_text" required>
+                <button id="submit_new_word_button" type="submit">Submit new word</button>
+            </div>
+        </form>
+
+    </div>
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+
+</body>
+
+</html>

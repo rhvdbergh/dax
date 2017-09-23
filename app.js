@@ -216,7 +216,7 @@ http.createServer(function(req, res) {
 
     // test if method used is post
     if (req.method === "POST") {
-        fs.readFile("index.html", function(err, data) {
+        fs.readFile("html/add.html", function(err, data) {
             if (err) {
                 res.writeHead(404, { 'content-type': 'text/html' });
                 return res.end("404 not found");
@@ -243,7 +243,7 @@ http.createServer(function(req, res) {
                     console.log("MySQL command: " + sql);
                 });
             });
-            // return the user to the web page selected above (index.html):
+            // return the user to the web page selected above (html/add.html):
             res.writeHead(200, { 'content-type': 'text/html' });
             res.write(data);
             return res.end();
