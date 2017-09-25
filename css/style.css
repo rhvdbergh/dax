@@ -152,3 +152,7 @@ button:hover {
     width: 400px;
     height: 250px;
 }
+
+.timerstr {
+    font-size: 1.3rem;
+}
