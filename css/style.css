@@ -102,6 +102,15 @@ button {
     float: right;
 }
 
+.next_word_button,
+.review_short_button,
+.review_final_button,
+.all_done_button {
+    margin: 25%;
+    width: 50%;
+    text-decoration: none;
+}
+
 .question {
     clear: both;
     text-align: center;

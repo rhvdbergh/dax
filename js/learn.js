@@ -1,19 +1,23 @@
 $(document).ready(function() {
 
     var seconds = 0;
-    var shortTimeSeconds = 0;
+    var shortTermSeconds = 0;
     var timeUp = false;
     var shortTimeUp = false;
     var cardFlipped = false;
     var decisionMade = false;
-    var lastround = false;
-    var timeDuration = 10; // this should be 720 (= 12 min), if different changed for debugging purposes
-    var shortTimeDuration = 5; // this should be 18, if different changed for debugging purposes
+    var inShortTermReview = false;
+    var inFinalReview = false;
+    var lastRound = false;
+    var duration = 10; // this should be 720 (= 12 min), if different changed for debugging purposes
+    var shortTermDuration = 5; // this should be 18, if different changed for debugging purposes
     var jsonObj = [];
     var shortTermLearnedObj = [];
     var notLearnedObj = [];
     var learnedObj = [];
     var place = 0; // keeps track of which card is currently being learned
+    var reviewPlace = 0; // similar to place, but in review objects
+    var finalReviewPlace = 0;
 
     function calculateTimestamp() {
         return Math.round(Date.now() / 1000);
@@ -22,39 +26,55 @@ $(document).ready(function() {
     function getNewWords() {
         $.get("?getoverduewords", function(data) {
 
-            // save present card, so user does not go out of sync
-            var currentCard = jsonObj[place];
             jsonObj = JSON.parse(data);
-
-            place = 0;
 
             console.log("Request for new data has returned!");
             console.log("data is: " + data);
             console.log("The number of cards returned are: " + jsonObj.length);
-
-            // check if the currentCard is among the cards returned
-            // if so, remove the card from the returned cards and place it "on top" at place 0
-            var currentCardReturned = false; // check to see if currentCard is among cards returned
-            for (var i = 0; i < jsonObj.length; i++) {
-                if (jsonObj[i].id === currentCard.id) {
-                    console.log("Old card already in set returned, card is: " + currentCard.id + " position is " + i);
-                    jsonObj.splice(i, 1); // take the currentCard out of the pile
-                    jsonObj.splice(0, 0, currentCard); // place currentCard at place 0
-
-                    currentCardReturned = true;
-                    console.log("After splice / insert, set of cards = " + JSON.stringify(jsonObj));
-                }
-            }
-
-            if (!currentCardReturned) { // currentCard was not among the batch returned
-                jsonObj[0] = currentCard; // so replace the first card at place 0 with currentCard
-            }
 
             console.log("jsonObj.length = " + jsonObj.length);
             if (jsonObj.length < 20) {
                 console.log("There are less than 20 cards left!");
                 lastRound = true;
             }
+
+            // remove newly returned cards that are identical to those on this session's not learned pile
+            // counting backwards because then deleting from array will not affect counter!
+            for (var i = notLearnedObj.length - 1; i >= 0; i--) {
+                for (var j = jsonObj.length - 1; j >= 0; j--) {
+                    if (notLearnedObj[i].id === jsonObj[j].id) { // this card already in the not learned pile in this session!
+                        jsonObj.splice(j, 1); // so delete it from the jsonObj
+                        j--; // jsonObj has become one element shorter, and the element at j-- has
+                        // already been evaluated
+                    }
+                }
+            }
+
+            // remove newly returned cards that are identical to those on this session's learned pile
+            for (var i = learnedObj.length - 1; i >= 0; i--) {
+                for (var j = jsonObj.length - 1; j >= 0; j--) {
+                    if (learnedObj[i].id === jsonObj[j].id) { // this card already in the  learned pile in this session!
+                        jsonObj.splice(j, 1); // so delete it from the jsonObj
+                        j--;
+                    }
+                }
+            }
+
+            // remove newly returned cards that are identical to those on this session's short term learned pile
+            for (var i = shortTermLearnedObj.length - 1; i >= 0; i--) {
+                for (var j = jsonObj.length - 1; j >= 0; j--) {
+                    if (shortTermLearnedObj[i].id === jsonObj[j].id) { // this card already in the short term learned pile in this session!
+                        jsonObj.splice(j, 1); // so delete it from the jsonObj
+                    }
+                }
+            }
+
+            for (var i = 0; i < jsonObj.length; i++) { // add newly retrieved cards to cards not yet learned in this session
+                notLearnedObj.push(jsonObj[i]);
+                // all the cards that are already in this session have been removed from jsonObj,
+                // so only new cards will be added to the not learned pile
+            }
+
         });
     }
 
@@ -65,26 +85,23 @@ $(document).ready(function() {
             console.log("data is: " + data);
             console.log("The number of cards returned are: " + jsonObj.length);
 
+            if (jsonObj.length < 20) {
+                console.log("There are less than 20 cards left!");
+                lastRound = true;
+            }
+
+            for (var i = 0; i < jsonObj.length; i++) {
+                notLearnedObj.push(jsonObj[i]);
+            }
+
             // set up initial cards
-
-            $('.review_word_front').text(jsonObj[place].front);
-            $('.review_word_back').text("Click here to reveal card...");
+            $('.review_word_front').text(notLearnedObj[place].front); // place = 0 at this point
+            $('.review_word_back').text(notLearnedObj[place].back);
             $('.review_question').hide();
-
-            $('.review_word_back').on('click', function() {
-
-                // check to see if new words are needed from the server
-                if (place > 17) {
-                    console.log("Space getting tight!");
-                    getNewWords();
-                }
-
-                if (!decisionMade) {
-                    $('.review_word_back').text(jsonObj[place].back);
-                    cardFlipped = true;
-                    $('.review_question').show();
-                }
-            });
+            $('.review_short_button').hide();
+            $('.review_final_button').hide();
+            $('.all_done_button').hide();
+            $('.next_word_button').show();
 
             callback;
         });
@@ -92,72 +109,183 @@ $(document).ready(function() {
 
     function learnCards() {
 
+        $('.next_word_button').on('click', function() {
+
+            shortTermLearnedObj.push(notLearnedObj[place]);
+            console.log('Card placed on short term learned pile: ' + JSON.stringify(shortTermLearnedObj[shortTermLearnedObj.length - 1])); // for debugging purposes
+            place++;
+            cardFlipped = false;
+            if (!shortTimeUp) {
+                $('.review_word_front').text(notLearnedObj[place].front);
+                $('.review_word_back').text(notLearnedObj[place].back);
+
+            }
+
+            // check to see if new words are needed from the server
+            if (place > (notLearnedObj.length - 4)) { // coming close to the end of the not learned pile!
+                console.log("Space getting tight!");
+                getNewWords();
+            }
+        });
+
+        $('.review_short_button').on('click', function() {
+
+            // send last shown card to the short term learned pile
+            shortTermLearnedObj.push(notLearnedObj[place]);
+            console.log('(Last) card placed on short term learned pile: ' + JSON.stringify(shortTermLearnedObj[shortTermLearnedObj.length - 1])); // for debugging purposes            
+            $('.review_short_button').hide();
+            reviewPlace = 0;
+            place++;
+
+            // set up initial review card
+            $('.review_word_front').text(shortTermLearnedObj[reviewPlace].front);
+            $('.review_word_back').text('Click here to reveal card...');
+            decisionMade = false;
+        });
+
+        $('.review_final_button').on('click', function() {
+            $('.review_final_button').hide();
+
+            finalReviewPlace = 0;
+
+            // set up initial review card
+            $('.review_word_front').text(learnedObj[finalReviewPlace].front);
+            $('.review_word_back').text('Click here to reveal card...');
+            $('.review_word_front').show();
+            $('.review_word_back').show();
+            decisionMade = false;
+            cardFlipped = false;
+
+        })
+
+        $('.review_word_back').on('click', function() {
+
+            if (inShortTermReview && !cardFlipped) {
+                $('.review_word_back').text(shortTermLearnedObj[reviewPlace].back);
+                cardFlipped = true;
+                $('.review_question').show();
+            }
+
+            if (inFinalReview && !cardFlipped) {
+                $('.review_word_back').text(learnedObj[finalReviewPlace].back);
+                cardFlipped = true;
+                $('.review_question').show();
+            }
+        });
+
         $('#yes_btn').on('click', function() {
-            if ((!shortTimeUp || !decisionMade) && cardFlipped) {
-                shortTermLearnedObj.push(jsonObj[place]);
-                /*
-                jsonObj[place].batch++;
-                jsonObj[place].overdue = 0;
-                jsonObj[place].timestamp = calculateTimestamp().toString();
-                $.get("?updatecard" + JSON.stringify(jsonObj[place]));
-                */
-                place++;
+            if (inShortTermReview) {
+                // add this card to the learned pile
+                learnedObj.push(shortTermLearnedObj[reviewPlace]);
+                console.log('Card placed on learned pile for final review: ' + JSON.stringify(shortTermLearnedObj[reviewPlace])); // for debugging purposes
 
-                // only if not shortTimeUp will the user have a next decision  
-                // else the last decision was made, so decisionMade = true
-                // also, only if short time is not up yet will new card be shown
-                if (!shortTimeUp) {
+                $('.review_question').hide();
+                if (reviewPlace < shortTermLearnedObj.length - 1) {
+                    reviewPlace++;
 
-                    $('.review_word_front').text(jsonObj[place].front);
-                    $('.review_word_back').text("Click here to reveal card...");
+                    // set up new card for review
+                    $('.review_word_front').text(shortTermLearnedObj[reviewPlace].front);
+                    $('.review_word_back').text('Click here to reveal card...');
                     decisionMade = false;
                     cardFlipped = false;
+                } else { // we have reached the end of the short term learned pile
+                    console.log('We have reached the end of the short term learned pile!');
+                    //  reviewPlace = 0;
+                    inShortTermReview = false;
 
-                } else {
-                    decisionMade = true;
+                    if (!timeUp) {
+                        // set up new cards for learning
+                        $('.review_word_front').text(notLearnedObj[place].front);
+                        $('.review_word_back').text(notLearnedObj[place].back);
+                        $('.next_word_button').show();
+                        shortTimeUp = false;
+                    }
                 }
+
+            }
+
+            if (inFinalReview) {
+                // update card on the server
+                learnedObj[finalReviewPlace].batch++;
+                learnedObj[finalReviewPlace].overdue = 0;
+                learnedObj[finalReviewPlace].timestamp = calculateTimestamp().toString();
+                $.get("?updatecard" + JSON.stringify(learnedObj[finalReviewPlace]));
+                console.log("Card update sent to server: " + JSON.stringify(learnedObj[finalReviewPlace]));
 
                 $('.review_question').hide();
 
-                // for debugging purposes:
-                console.log("Decision made: yes");
-                console.log("The card " + JSON.stringify(jsonObj[place - 1]) + " has been placed back on the 'learned' pile.");
-                console.log("Place: " + place);
+                if (finalReviewPlace < learnedObj.length - 1) {
+                    finalReviewPlace++;
+
+                    // set up new card for review
+                    $('.review_word_front').text(learnedObj[finalReviewPlace].front);
+                    $('.review_word_back').text('Click here to reveal card...');
+                    decisionMade = false;
+                    cardFlipped = false;
+                } else { // we have reached the end of the session!
+                    console.log("All done! We have reached the end of this session!");
+                    $('.review_word_front').hide();
+                    $('.review_word_back').hide();
+                    $('.all_done_button').show();
+
+                }
+
             }
         });
 
         $('#no_btn').on('click', function() {
-            if ((!shortTimeUp || !decisionMade) && cardFlipped) {
-
-                notLearnedObj.push(jsonObj[place]);
-                /*
-                jsonObj[place].batch = 0;
-                jsonObj[place].overdue = 0;
-                jsonObj[place].timestamp = calculateTimestamp().toString();
-                $.get("?updatecard" + JSON.stringify(jsonObj[place]));
-                */
-                place++;
-
-                // only if not shortTimeUp will the user have a next decision  
-                // else the last decision was made, so decisionMade = true
-                // also, only if short time is not up yet will new card be shown
-                if (!shortTimeUp) {
-
-                    $('.review_word_front').text(jsonObj[place].front);
-                    $('.review_word_back').text("Click here to reveal card...");
-                    cardFlipped = false;
-                    decisionMade = false;
-
-                } else {
-                    decisionMade = true;
-                }
+            if (inShortTermReview) {
+                // return this card to the not learned pile
+                notLearnedObj.push(shortTermLearnedObj[reviewPlace]);
+                console.log('Card returned to not learned pile: ' + JSON.stringify(shortTermLearnedObj[reviewPlace])); // for debugging purposes
 
                 $('.review_question').hide();
+                if (reviewPlace < shortTermLearnedObj.length - 1) {
+                    reviewPlace++;
 
-                // for debugging purposes:
-                console.log("Decision made: no");
-                console.log("The card " + JSON.stringify(jsonObj[place - 1]) + " has been placed back on the 'not learned' pile.");
+                    // set up new card for review
+                    $('.review_word_front').text(shortTermLearnedObj[reviewPlace].front);
+                    $('.review_word_back').text('Click here to reveal card...');
+                    decisionMade = false;
+                    cardFlipped = false;
+                } else { // we have reached the end of the short term learned pile
+                    console.log('We have reached the end of the short term learned pile!');
+                    //  reviewPlace = 0;
+                    inShortTermReview = false;
+
+                    shortTimeUp = false;
+                    if (!timeUp) {
+                        // set up new cards for learning
+                        $('.review_word_front').text(notLearnedObj[place].front);
+                        $('.review_word_back').text(notLearnedObj[place].back);
+                        $('.next_word_button').show();
+                    }
+                }
+
             }
+
+            if (inFinalReview) {
+                $('.review_question').hide();
+                console.log("Card discarded from session: " + JSON.stringify(learnedObj[finalReviewPlace]));
+
+                if (reviewPlace < shortTermLearnedObj.length - 1) {
+
+                    finalReviewPlace++;
+
+                    // set up new card for review
+                    $('.review_word_front').text(learnedObj[finalReviewPlace].front);
+                    $('.review_word_back').text('Click here to reveal card...');
+                    decisionMade = false;
+                    cardFlipped = false;
+                } else { // we have reached the end of the session!
+                    console.log("All done! We have reached the end of this session!");
+                    $('.review_word_front').hide();
+                    $('.review_word_back').hide();
+                    $('.all_done_button').show();
+
+                }
+            }
+
         });
     }
 
@@ -165,30 +293,48 @@ $(document).ready(function() {
 
     function timer() {
         setInterval(function() {
+
             if (!timeUp) {
                 seconds++;
             }
             if (!shortTimeUp) {
-                shortTimeSeconds++;
+                shortTermSeconds++;
             }
-            if (shortTimeSeconds > shortTimeDuration) {
+            if (shortTermSeconds > shortTermDuration) {
                 shortTimeUp = true;
                 console.log('Short time up!');
-                shortTimeSeconds = 0;
-                if (!cardFlipped) {
-                    decisionMade = false; // to make sure user gets a chance to answer last question
+
+                if (!inFinalReview) { // if it's the last round, don't reset to 0
+                    shortTermSeconds = 0;
+                }
+                if (shortTimeUp && !inShortTermReview && !inFinalReview) {
+                    $('.next_word_button').hide();
+                    $('.review_short_button').show();
+                    inShortTermReview = true;
                 }
             };
-            if (seconds > timeDuration) {
+            if (seconds > duration) {
+                if (!timeUp) { // for debugging purposes
+                    console.log('Time is up!');
+                }
                 timeUp = true;
-                seconds = 0;
+
                 $('#timer').hide();
-                console.log('Time is up!');
+
+
+                if (timeUp && !inFinalReview && !inShortTermReview) {
+                    $('.next_word_button').hide();
+                    $('.review_short_button').hide();
+                    $('.review_word_front').hide();
+                    $('.review_word_back').hide();
+                    $('.review_final_button').show();
+                    inFinalReview = true;
+                }
                 if (!cardFlipped) {
                     decisionMade = false; // to make sure user gets a chance to answer last question
                 }
             };
-            $('.timerstr').text("Time: " + Math.floor(seconds / 60) + ":" + (seconds % 60) + " Short: " + shortTimeSeconds);
+            $('.timerstr').text("Time: " + Math.floor(seconds / 60) + ":" + (seconds % 60) + " Short: " + shortTermSeconds);
 
         }, 1000);
     }
