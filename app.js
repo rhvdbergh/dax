@@ -4,6 +4,12 @@ var url = require('url');
 var mysql = require('mysql');
 var qs = require('querystring');
 
+var usersInSession = []; // array to hold users in session
+
+// a session not interacted with for 5 minutes will expire 
+var sessionDuration = 900000; // should be 900000 (ms! = 15 minutes), if not this is for debugging
+
+
 // current working mysql database and table
 var currentDatabase = "temp_database";
 var currentTable = "words";
@@ -212,17 +218,35 @@ http.createServer(function(req, res) {
         res.end();
     }
 
+    function triggerSession(user) {
+        user.intervalID = setInterval(function() {
+
+            if (usersInSession.includes(user)) {
+                var userIndex = usersInSession.indexOf(user);
+                if (calculateTimestamp() - usersInSession[userIndex].lastInteraction > (sessionDuration / 1000)) { // user has been inactive for 6000 minutes
+                    // find position of usersInSession and remove user
+                    console.log("Session expired. Logging user " + user.userName + " out.");
+                    usersInSession.splice(userIndex, 1);
+                    clearInterval(user.intervalID);
+                    if (usersInSession.length > 0) {
+                        console.log("Users still in session: ");
+                        for (var i = 0; i < usersInSession.length; i++) {
+                            console.log("User " + usersInSession[i].userName);
+                        }
+                        console.log("----------------------");
+                    } else { console.log("No users left in session.") }
+                } else {
+                    console.log("User " + user.userName + " is still logged in.");
+                }
+            }
+        }, sessionDuration);
+    }
+
     // File handling
 
-    // test to see if user logged in with username and password
-    if ((req.method === "GET") && (req.url.indexOf('?uname') != -1) && (req.url.indexOf('psw') != -1)) {
-        var log = url.parse(req.url, true).query;
-        console.log("User login query received. Username: " + log.uname + " Password: " + log.psw);
-        return res.end();
-    }
     // test if method used is post
     if (req.method === "POST") {
-        console.log("Request url: " + req.url);
+        console.log("Request url: " + req.url); // for debugging purposes
         fs.readFile('.' + req.url, function(err, data) {
             if (err) {
                 res.writeHead(404, { 'content-type': 'text/html' });
@@ -259,6 +283,10 @@ http.createServer(function(req, res) {
                 } else if (post.uname) {
                     console.log("Login request received.")
                     console.log("User login query received. Username: " + post.uname + " Password: " + post.psw);
+                    // intervalID is necessary to stop the interval with clearInterval()
+                    var userData = { "userName": post.uname, "lastInteraction": calculateTimestamp(), "intervalID": '' };
+                    usersInSession.push(userData);
+                    triggerSession(userData);
                 }
             });
             // return the user to the web page selected above (html/add.html):
