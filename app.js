@@ -214,15 +214,21 @@ http.createServer(function(req, res) {
 
     // File handling
 
+    // test to see if user logged in with username and password
+    if ((req.method === "GET") && (req.url.indexOf('?uname') != -1) && (req.url.indexOf('psw') != -1)) {
+        var log = url.parse(req.url, true).query;
+        console.log("User login query received. Username: " + log.uname + " Password: " + log.psw);
+        return res.end();
+    }
     // test if method used is post
     if (req.method === "POST") {
-        fs.readFile("html/add.html", function(err, data) {
+        console.log("Request url: " + req.url);
+        fs.readFile('.' + req.url, function(err, data) {
             if (err) {
                 res.writeHead(404, { 'content-type': 'text/html' });
                 return res.end("404 not found");
             };
 
-            console.log("Will now write to MySQL database");
             var body = '';
 
             // set the values of body equal to the data of the POST received
@@ -232,16 +238,28 @@ http.createServer(function(req, res) {
 
             // parse body data and extract text fields         
             req.on('end', function() {
-                var post = qs.parse(body);
-                console.log("Front text is: " + post.front_text);
-                console.log("Back text is: " + post.back_text);
 
-                // MySQL query handling
-                var sql = "INSERT INTO " + currentTable + " (front, back, timestamp) VALUES ('" + post.front_text + "', '" + post.back_text + "', '" + calculateTimestamp().toString() + "')";
-                con.query(sql, function(err, result) {
-                    if (err) throw err;
-                    console.log("MySQL command: " + sql);
-                });
+                var post = qs.parse(body);
+
+                // test to see if the POST request was to update a card
+                // if the parsed data contains .front_text, this must be a card
+                if (post.front_text) {
+                    console.log("Will now write to MySQL database");
+                    console.log("Front text is: " + post.front_text);
+                    console.log("Back text is: " + post.back_text);
+
+                    // MySQL query handling
+                    var sql = "INSERT INTO " + currentTable + " (front, back, timestamp) VALUES ('" + post.front_text + "', '" + post.back_text + "', '" + calculateTimestamp().toString() + "')";
+                    con.query(sql, function(err, result) {
+                        if (err) throw err;
+                        console.log("MySQL command: " + sql);
+                    });
+                    // else test if POST request was to log in
+                    // if the parsed data contains a .uname field, this must be a login attempt
+                } else if (post.uname) {
+                    console.log("Login request received.")
+                    console.log("User login query received. Username: " + post.uname + " Password: " + post.psw);
+                }
             });
             // return the user to the web page selected above (html/add.html):
             res.writeHead(200, { 'content-type': 'text/html' });
@@ -249,14 +267,6 @@ http.createServer(function(req, res) {
             return res.end();
         });
     };
-
-    // test to see if user logged in with username and password
-    if ((req.method === "GET") && (req.url.indexOf('?uname') != -1) && (req.url.indexOf('psw') != -1)) {
-        var log = url.parse(req.url, true).query;
-        console.log("User login query received. Username: " + log.uname + " Password: " + log.psw);
-        return res.end();
-    }
-
 
     // test if the root domain was selected, or index without its extension was entered
     // if the above is true, return index.html
