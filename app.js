@@ -250,9 +250,17 @@ http.createServer(function(req, res) {
         });
     };
 
+    // test to see if user logged in with username and password
+    if ((req.method === "GET") && (req.url.indexOf('?uname') != -1) && (req.url.indexOf('psw') != -1)) {
+        var log = url.parse(req.url, true).query;
+        console.log("User login query received. Username: " + log.uname + " Password: " + log.psw);
+        return res.end();
+    }
+
 
     // test if the root domain was selected, or index without its extension was entered
     // if the above is true, return index.html
+    // this will not include queries, as queries will alway have .html added
     if ((req.url === "/" || req.url === "/index") && req.method === "GET") {
         fs.readFile("index.html", function(err, data) {
             if (err) {
