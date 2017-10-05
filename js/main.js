@@ -48,7 +48,7 @@ $(document).ready(function() {
             $('.navbar-right').append("<li id='nav_btn_add'><a href='./html/add.html'>Add words</a></li>");
             $('.navbar-right').append("<li id='nav_btn_learn'><a href='./html/learn.html'>Learn</a></li>");
             $('.navbar-right').append("<li id='nav_btn_review'><a href='./html/review.html'>Review</a></li>");
-            $('.navbar-right').append("<li id='nav_btn_account'><a href=''>Account</a></li>");
+            //  $('.navbar-right').append("<li id='nav_btn_account'><a href=''>Account</a></li>");
             $('.login_container').hide();
         }
     }
