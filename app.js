@@ -5,6 +5,9 @@ var mysql = require('mysql');
 var qs = require('querystring');
 var jwt = require('jsonwebtoken');
 
+var jwtSecret = "sh1bb0l3th"; // secret to encode and decode JSON Web Tokens
+var jwtExpiry = "7d"; // expiry date of web tokens; should be "7d"
+
 // example of how to use jwt
 var token = jwt.sign({ 'foo': 'bar', }, 'shhhh');
 console.log('Token: ' + token);
@@ -208,6 +211,40 @@ http.createServer(function(req, res) {
         getRandomBatch0Cards(currentTable, sendCards);
     }
 
+    // validation of jwt
+    // possible responses:
+    // 0 token invalid, malformed token, etc
+    // 1 token valid
+    // 2 token expired
+    if ((req.url.indexOf('?validateJWT') != -1) && req.method === "GET") { // test if query was submitted
+
+        console.log("Request for JWT validation received.");
+        keyStr = req.url.slice(req.url.indexOf('?validateJWT') + '?validateJWT'.length);
+        console.log("keyStr = " + keyStr);
+
+        jwt.verify(keyStr, jwtSecret, function(err, decoded) {
+            if (err) {
+                if (err.name === "TokenExpiredError") {
+                    console.log("Token Expired; New login required.");
+                    res.writeHead(200, { 'content-type': 'text/html' });
+                    res.write("2");
+                    return res.end();
+                } else {
+                    console.log("Something wrong with the user token.");
+                    res.writeHead(200, { 'content-type': 'text/html' });
+                    res.write("0");
+                    return res.end();
+                }
+            }
+            console.log("After decoding, user name = " + decoded.name);
+            res.writeHead(200, { 'content-type': 'text/html' });
+            res.write("1");
+        });
+
+        return res.end();
+
+    }
+
     function updateCard(tableName, card) {
         console.log("JSON passed to updateCard: " + JSON.stringify(card));
         sql = "UPDATE " + tableName + " SET batch = " + card.batch + ", timestamp = " + card.timestamp + ", overdue = " + card.overdue + " WHERE id = " + card.id;
@@ -288,9 +325,9 @@ http.createServer(function(req, res) {
                 } else if (post.uname) {
                     console.log("Login request received.")
                     console.log("User login query received. Username: " + post.uname + " Password: " + post.psw);
-                    // generate jwt key
-                    var jwtKey = jwt.sign({ 'name': post.uname }, 'sh1bb0l3th', { expiresIn: '7d' });
-                    console.log('JWT generated: ' + token);
+                    // generate jwt key which will expire in jwtExpiry amount of days (should be 7)
+                    var jwtKey = jwt.sign({ 'name': post.uname }, jwtSecret, { expiresIn: jwtExpiry });
+                    console.log('JWT generated: ' + jwtKey);
                     // return the user to the web page selected above (html/add.html):
                     // add to the document a script with a jwt as login key
                     res.writeHead(200, { 'content-type': 'text/html' });
