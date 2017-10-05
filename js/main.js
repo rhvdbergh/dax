@@ -31,7 +31,12 @@ $(document).ready(function() {
     }
 
     function doLoginLogic() {
+
         if (!loggedIn) {
+            $('.login_container').append("<input type='text' placeholder='Email' name='uname' required>");
+            $('.login_container').append("<input type='password' placeholder='Password' name='psw' required>");
+            $('.login_container').append("<button type='submit' class='submit_login_btn'>Login</button>");
+
             /* $('#nav_btn_add').hide();
              $('#nav_btn_learn').hide();
              $('#nav_btn_review').hide();
