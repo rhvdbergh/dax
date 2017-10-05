@@ -9,10 +9,10 @@ var jwtSecret = "sh1bb0l3th"; // secret to encode and decode JSON Web Tokens
 var jwtExpiry = "7d"; // expiry date of web tokens; should be "7d"
 
 // example of how to use jwt
-var token = jwt.sign({ 'foo': 'bar', }, 'shhhh');
-console.log('Token: ' + token);
-var decoded = jwt.verify(token, 'shhhh');
-console.log('Decoded token: ' + decoded.foo);
+// var token = jwt.sign({ 'foo': 'bar', }, 'shhhh');
+// console.log('Token: ' + token);
+// var decoded = jwt.verify(token, 'shhhh');
+// console.log('Decoded token: ' + decoded.foo);
 
 // current working mysql database and table
 // for debugging purposes
@@ -363,7 +363,7 @@ http.createServer(function(req, res) {
                 res.writeHead(404, { 'content-type': 'text/html' });
                 return res.end("404 not found");
             }
-            //if file is found, return
+            //if file is found
             res.writeHead(200, { 'content-type': 'text/html' });
             res.write(data);
             return res.end();

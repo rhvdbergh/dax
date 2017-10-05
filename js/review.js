@@ -8,6 +8,10 @@ $(document).ready(function() {
     var jsonObj;
     var place = 0; // keeps track of which card is currently being learned
 
+    $(".logout").on('click', function() {
+        localStorage.removeItem('key');
+    });
+
     function calculateTimestamp() {
         return Math.round(Date.now() / 1000);
     }

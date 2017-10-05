@@ -2,6 +2,10 @@ $(document).ready(function() {
     var loggedIn = false;
     var key = localStorage.getItem('key');
 
+    $('.logout').on('click', function() {
+        localStorage.removeItem('key');
+    });
+
     $('.submit_login_btn').on('click', function() {
 
         // send login details to the server
@@ -48,6 +52,7 @@ $(document).ready(function() {
             $('.navbar-right').append("<li id='nav_btn_add'><a href='./html/add.html'>Add words</a></li>");
             $('.navbar-right').append("<li id='nav_btn_learn'><a href='./html/learn.html'>Learn</a></li>");
             $('.navbar-right').append("<li id='nav_btn_review'><a href='./html/review.html'>Review</a></li>");
+            $('.navbar-right').append("<li class='logout'><a href='./index.html'>Logout</a></li>");
             //  $('.navbar-right').append("<li id='nav_btn_account'><a href=''>Account</a></li>");
             $('.login_container').hide();
         }

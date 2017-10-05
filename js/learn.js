@@ -19,6 +19,10 @@ $(document).ready(function() {
     var reviewPlace = 0; // similar to place, but in review objects
     var finalReviewPlace = 0;
 
+    $(".logout").on('click', function() {
+        localStorage.removeItem('key');
+    });
+
     function calculateTimestamp() {
         return Math.round(Date.now() / 1000);
     }
