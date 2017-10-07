@@ -18,10 +18,33 @@ $(document).ready(function() {
     var place = 0; // keeps track of which card is currently being learned
     var reviewPlace = 0; // similar to place, but in review objects
     var finalReviewPlace = 0;
+    var key = localStorage.getItem('key');
 
     $(".logout").on('click', function() {
         localStorage.removeItem('key');
     });
+
+    if (key != null) { // if there is no key return to index.html
+
+        $.get("?validateJWT" + key, function(data) {
+            if (data === "0") { // there is something wrong with the token. New login and token required
+                localStorage.removeItem('key'); // key removed so new key will be generated
+                console.log("User token existed, but was corrupt. Token removed & new login required.");
+                location.href = "../index.html";
+            }
+            if (data === "1") { // valid token
+                console.log("Logged in.");
+            }
+            if (data === "2") { // token has expired
+                console.log("Token has expired. New login required.");
+                location.href = "../index.html";
+            }
+        });
+    } else {
+
+        location.href = "../index.html";
+
+    }
 
     function calculateTimestamp() {
         return Math.round(Date.now() / 1000);
