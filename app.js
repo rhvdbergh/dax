@@ -16,8 +16,8 @@ var jwtExpiry = "7d"; // expiry date of web tokens; should be "7d"
 
 // current working mysql database and table
 // for debugging purposes
-var currentDatabase = "temp_database";
-var currentTable = "words";
+var currentDatabase = "vocabspace";
+var currentTable = "userinfo";
 
 // Create connection to MySQL database;
 var con = mysql.createConnection({
@@ -56,7 +56,7 @@ createDB(currentDatabase, useDB(currentDatabase));
 
 // create a table if it doesn't exist
 // overdue column functions as a boolean column where 0 = false, 1 = true;
-function createTable(tableName, callback) {
+function createCardsTable(tableName, callback) {
     var sql = "CREATE TABLE IF NOT EXISTS " + tableName + " (id INT NOT NULL AUTO_INCREMENT, front TINYTEXT, back TINYTEXT, batch TINYINT DEFAULT 0, timestamp INT, overdue INT DEFAULT 0, PRIMARY KEY (id))"
     con.query(sql, function(err, result) {
         if (err) throw err;
@@ -65,7 +65,19 @@ function createTable(tableName, callback) {
     });
 }
 
-createTable(currentTable);
+// for debugging purposes
+// createCardsTable(currentTable);
+
+function createUserInfoTable(tableName, callback) {
+    var sql = "CREATE TABLE IF NOT EXISTS " + tableName + " (id INT NOT NULL AUTO_INCREMENT, username TINYTEXT, psw TINYTEXT, PRIMARY KEY (id))"
+    con.query(sql, function(err, result) {
+        if (err) throw err;
+        console.log("Table " + tableName + " exists.");
+        callback;
+    });
+}
+
+createUserInfoTable(currentTable);
 
 // helper-function for building sql string for calculating overdue timestamps
 function buildBatchSQLQuery(myBatch, time) {
@@ -141,7 +153,7 @@ function calculateTimestamp() {
 }
 
 // calculate overdue timestamps and update "overdue" column in MySQL
-calculateOverdue(currentTable);
+// calculateOverdue(currentTable);
 
 // this function returns the number of words in the table without having to count
 // rather, the information is retrieved once from the INFORMATION_SCHEMA.TABLES table
@@ -161,7 +173,7 @@ function getNumWords(dbName, tableName, callback) {
     return numWords;
 }
 
-getNumWords(currentDatabase, currentTable);
+// getNumWords(currentDatabase, currentTable);
 
 // act as a file server on localhost:8080
 // the file server will handle MySQL too
@@ -325,6 +337,9 @@ http.createServer(function(req, res) {
                 } else if (post.uname) {
                     console.log("Login request received.")
                     console.log("User login query received. Username: " + post.uname + " Password: " + post.psw);
+
+                    currentDatabase = "vocabspace";
+                    currentTable = "userinfo";
                     // generate jwt key which will expire in jwtExpiry amount of days (should be 7)
                     var jwtKey = jwt.sign({ 'name': post.uname }, jwtSecret, { expiresIn: jwtExpiry });
                     console.log('JWT generated: ' + jwtKey);
