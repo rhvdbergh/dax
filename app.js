@@ -206,9 +206,10 @@ http.createServer(function(req, res) {
         });
     }
 
-    function getRandomBatch0Cards(tableName, callback) {
+    function getRandomBatch0Cards(tableName, db, callback) {
         // if there are less than 20 batch 0 cards, only the correct number of cards will be returned
         var sql = "SELECT * FROM " + tableName + " WHERE batch = 0 ORDER BY RAND() LIMIT 20";
+        useDB(db);
         con.query(sql, function(err, result) {
             if (err) throw err;
             console.log("Your random cards are: " + JSON.stringify(result));
@@ -248,8 +249,31 @@ http.createServer(function(req, res) {
 
     if ((req.url.indexOf('?getnewwords') != -1) && req.method === "GET") { // test if query was submitted
 
-        console.log("request received");
-        getRandomBatch0Cards(currentTable, sendCards);
+        keyStr = req.url.slice(req.url.indexOf('?getnewwords') + '?getnewwords'.length);
+        validateJWT(keyStr, function(userinfo) {
+            if (userinfo.name) { // a valid JSON object was received
+
+                // retrieve the current card table
+                useDB(mainDB);
+                var currentCardTable = '';
+                var sql = "SELECT currenttable FROM userinfo WHERE username = '" + userinfo.name + "'";
+                con.query(sql, function(err, result) {
+                    if (err) throw err;
+                    var currentCardTable = result[0].currenttable;
+                    console.log("currentCardTable = " + currentCardTable);
+
+                    // set the database to be used
+                    var db = userinfo.name.replace(/@/g, 'at');
+                    var db = db.replace(/\./g, 'dot');
+                    console.log("db: " + db);
+
+                    getRandomBatch0Cards(currentCardTable, db, sendCards);
+                    useDB(mainDB);
+                });
+            } else {
+                console.log("Something went wrong! No overdue words returned.");
+            }
+        });
     }
 
     // validation of jwt
@@ -268,8 +292,8 @@ http.createServer(function(req, res) {
                 }
             }
             // check to see if there is a user in the userinfo table with the name and password
-            useDB(mainDB);
             var sql = "SELECT * FROM userinfo WHERE username = '" + decoded.name + "' AND psw = '" + decoded.psw + "' LIMIT 1;";
+            useDB(mainDB);
             con.query(sql, function(err, result) {
                 if (err) throw err;
                 if (result.length > 0) { // the username and password exist and match
@@ -356,8 +380,9 @@ http.createServer(function(req, res) {
         str = str_withoutQuote.replace(/%20/g, " ");
         console.log("JSON string received: " + str);
 
-        keyStr = req.url.slice(req.url.indexOf('?getoverduewords') + '?getoverduewords'.length, req.url.indexOf('{'));
-
+        keyStr = req.url.slice(req.url.indexOf('?updatecard') + '?updatecard'.length, req.url.indexOf('{'));
+        console.log('req.url in ?updatecard request is: ' + req.url);
+        console.log('keyStr in ?updatecard request is: ' + keyStr);
         validateJWT(keyStr, function(userinfo) {
             if (userinfo.name) { // a valid JSON object was received
 

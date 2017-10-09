@@ -55,7 +55,7 @@ $(document).ready(function() {
     }
 
     function getNewWords() {
-        $.get("?getoverduewords", function(data) {
+        $.get("?getnewwords" + key, function(data) {
 
             jsonObj = JSON.parse(data);
 
@@ -110,7 +110,7 @@ $(document).ready(function() {
     }
 
     function retrieveCards(callback) {
-        $.get("?getnewwords", function(data) {
+        $.get("?getnewwords" + key, function(data) {
             jsonObj = JSON.parse(data);
             console.log("request data returned");
             console.log("data is: " + data);
@@ -240,7 +240,7 @@ $(document).ready(function() {
                 learnedObj[finalReviewPlace].batch++;
                 learnedObj[finalReviewPlace].overdue = 0;
                 learnedObj[finalReviewPlace].timestamp = calculateTimestamp().toString();
-                $.get("?updatecard" + JSON.stringify(learnedObj[finalReviewPlace]));
+                $.get("?updatecard" + key + JSON.stringify(learnedObj[finalReviewPlace]));
                 console.log("Card update sent to server: " + JSON.stringify(learnedObj[finalReviewPlace]));
 
                 $('.review_question').hide();
