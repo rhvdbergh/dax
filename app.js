@@ -5,8 +5,14 @@ var mysql = require('mysql');
 var qs = require('querystring');
 var jwt = require('jsonwebtoken');
 
-var jwtSecret = "sh1bb0l3th"; // secret to encode and decode JSON Web Tokens
+var jwtSecret = ''; // secret to encode and decode JSON Web Tokens
 var jwtExpiry = "7d"; // expiry date of web tokens; should be "7d"
+var mainDB = ''; // main database to use for storage of user info
+var conHost = ''; // connection host
+var conUser = '';
+var conPassword = '';
+
+var con = function() {};
 
 // example of how to use jwt
 // var token = jwt.sign({ 'foo': 'bar', }, 'shhhh');
@@ -14,24 +20,42 @@ var jwtExpiry = "7d"; // expiry date of web tokens; should be "7d"
 // var decoded = jwt.verify(token, 'shhhh');
 // console.log('Decoded token: ' + decoded.foo);
 
-// current working mysql database and table
-// for debugging purposes
-var currentDatabase = "vocabspace";
-var mainDB = "vocabspace"; // value should be "vocabspace"
-var currentTable = "userinfo";
+// initialize settings at startup and create mysql connection
+fs.readFile("./init/settings.ini", function(err, data) {
+    if (err) {
+        console.log("Error: settings.ini file not found!");
+    }
+    var jsonInit = JSON.parse(data);
+    jwtSecret = jsonInit.jwtSecret;
+    mainDB = jsonInit.mainDB;
+    conHost = jsonInit.conHost;
+    conUser = jsonInit.conUser;
+    conPassword = jsonInit.conPassword;
 
-// Create connection to MySQL database;
-var con = mysql.createConnection({
-    host: "localhost",
-    user: "root",
-    password: "generic"
-});
+    // Create connection to MySQL database;
+    con = mysql.createConnection({
+        host: conHost,
+        user: conUser,
+        password: conPassword
+    });
 
-console.log("Current time is: " + calculateTimestamp() + " in seconds from Unix epoch.");
+    console.log("Current time is: " + calculateTimestamp() + " in seconds from Unix epoch.");
 
-con.connect(function(err) {
-    if (err) throw err;
-    console.log("Connected to MySQL.");
+    con.connect(function(err) {
+        if (err) throw err;
+        console.log("Connected to MySQL.");
+    });
+
+    createDB(mainDB);
+
+    // for debugging purposes
+    useDB('rhvdberghatgmaildotcom');
+    // for debugging purposes
+    createCardsTable('testtable');
+
+    useDB(mainDB);
+    createUserInfoTable("userinfo");
+
 });
 
 // create a database if it doesn't exist, then select it
@@ -51,10 +75,7 @@ function useDB(dbName, callback) {
         console.log("Database " + dbName + " selected for use.");
         callback;
     });
-
 }
-
-createDB(currentDatabase);
 
 // create a table if it doesn't exist
 // overdue column functions as a boolean column where 0 = false, 1 = true;
@@ -67,11 +88,6 @@ function createCardsTable(tableName, callback) {
     });
 }
 
-// for debugging purposes
-useDB('rhvdberghatgmaildotcom');
-// for debugging purposes
-createCardsTable('testtable');
-
 function createUserInfoTable(tableName, callback) {
     var sql = "CREATE TABLE IF NOT EXISTS " + tableName + " (id INT NOT NULL AUTO_INCREMENT, username TINYTEXT, psw TINYTEXT, currenttable TINYTEXT, PRIMARY KEY (id))"
     con.query(sql, function(err, result) {
@@ -80,9 +96,6 @@ function createUserInfoTable(tableName, callback) {
         callback;
     });
 }
-
-useDB(mainDB);
-createUserInfoTable(currentTable);
 
 // helper-function for building sql string for calculating overdue timestamps
 function buildBatchSQLQuery(myBatch, time) {
@@ -117,7 +130,6 @@ function buildBatchSQLQuery(myBatch, time) {
         default:
             0;
     }
-
     return "(batch = " + myBatch + ") AND (" + time + " - timestamp > " + timeInterval + ")";
 }
 
@@ -178,7 +190,7 @@ function getNumWords(dbName, tableName, callback) {
     return numWords;
 }
 
-// getNumWords(currentDatabase, currentTable);
+// getNumWords(mainDB, currentTable);
 
 // act as a file server on localhost:8080
 // the file server will handle MySQL too
@@ -492,8 +504,6 @@ http.createServer(function(req, res) {
                     console.log("Login request received.")
                     console.log("User login query received. Username: " + post.uname + " Password: " + post.psw);
 
-                    currentDatabase = "vocabspace";
-                    currentTable = "userinfo";
                     // generate jwt key which will expire in jwtExpiry amount of days (should be 7)
                     var jwtKey = jwt.sign({ 'name': post.uname, 'psw': post.psw }, jwtSecret, { expiresIn: jwtExpiry });
                     console.log('JWT generated: ' + jwtKey);
