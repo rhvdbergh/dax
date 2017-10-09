@@ -44,7 +44,7 @@ $(document).ready(function() {
     }
 
     function getNewWords() {
-        $.get("?getoverduewords", function(data) {
+        $.get("?getoverduewords" + key, function(data) {
 
             // save present card, so user does not go out of sync
             var currentCard = jsonObj[place];
@@ -83,7 +83,7 @@ $(document).ready(function() {
     }
 
     function retrieveCards(callback) {
-        $.get("?getoverduewords", function(data) {
+        $.get("?getoverduewords" + key, function(data) {
             jsonObj = JSON.parse(data);
             console.log("request data returned");
             console.log("data is: " + data);
@@ -134,7 +134,7 @@ $(document).ready(function() {
                 jsonObj[place].batch++;
                 jsonObj[place].overdue = 0;
                 jsonObj[place].timestamp = calculateTimestamp().toString();
-                $.get("?updatecard" + JSON.stringify(jsonObj[place]));
+                $.get("?updatecard" + key + JSON.stringify(jsonObj[place]));
 
                 place++;
 
@@ -165,7 +165,7 @@ $(document).ready(function() {
                 jsonObj[place].batch = 0;
                 jsonObj[place].overdue = 0;
                 jsonObj[place].timestamp = calculateTimestamp().toString();
-                $.get("?updatecard" + JSON.stringify(jsonObj[place]));
+                $.get("?updatecard" + key + JSON.stringify(jsonObj[place]));
 
                 place++;
 

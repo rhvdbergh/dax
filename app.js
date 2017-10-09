@@ -195,8 +195,9 @@ http.createServer(function(req, res) {
     }
 
     // this function retrieves a random overdue card from the database to review
-    function getRandomOverdueCards(tableName, callback) {
+    function getRandomOverdueCards(tableName, db, callback) {
         // if there are less than 20 overdue cards, only the overdue cards will be returned
+        useDB(db);
         var sql = "SELECT * FROM " + tableName + " WHERE overdue = 1 ORDER BY RAND() LIMIT 20";
         con.query(sql, function(err, result) {
             if (err) throw err;
@@ -218,9 +219,32 @@ http.createServer(function(req, res) {
     // if request is for new word cards, send cards as JSON 
     if ((req.url.indexOf('?getoverduewords') != -1) && req.method === "GET") { // test if query was submitted
 
-        console.log("request received");
-        getRandomOverdueCards(currentTable, sendCards);
-    }
+        keyStr = req.url.slice(req.url.indexOf('?getoverduewords') + '?getoverduewords'.length);
+        validateJWT(keyStr, function(userinfo) {
+            if (userinfo.name) { // a valid JSON object was received
+
+                // retrieve the current card table
+                useDB(mainDB);
+                var currentCardTable = '';
+                var sql = "SELECT currenttable FROM userinfo WHERE username = '" + userinfo.name + "'";
+                con.query(sql, function(err, result) {
+                    if (err) throw err;
+                    var currentCardTable = result[0].currenttable;
+                    console.log("currentCardTable = " + currentCardTable);
+
+                    // set the database to be used
+                    var db = userinfo.name.replace(/@/g, 'at');
+                    var db = db.replace(/\./g, 'dot');
+                    console.log("db: " + db);
+
+                    getRandomOverdueCards(currentCardTable, db, sendCards);
+                    useDB(mainDB);
+                });
+            } else {
+                console.log("Something went wrong! No overdue words returned.");
+            }
+        });
+    };
 
     if ((req.url.indexOf('?getnewwords') != -1) && req.method === "GET") { // test if query was submitted
 
@@ -244,7 +268,7 @@ http.createServer(function(req, res) {
                 }
             }
             // check to see if there is a user in the userinfo table with the name and password
-            //  useDB(mainDB, function() {
+            useDB(mainDB);
             var sql = "SELECT * FROM userinfo WHERE username = '" + decoded.name + "' AND psw = '" + decoded.psw + "' LIMIT 1;";
             con.query(sql, function(err, result) {
                 if (err) throw err;
@@ -310,9 +334,10 @@ http.createServer(function(req, res) {
         });
     }
 
-    function updateCard(tableName, card) {
+    function updateCard(tableName, db, card) {
         console.log("JSON passed to updateCard: " + JSON.stringify(card));
         sql = "UPDATE " + tableName + " SET batch = " + card.batch + ", timestamp = " + card.timestamp + ", overdue = " + card.overdue + " WHERE id = " + card.id;
+        useDB(db);
         con.query(sql, function(err, result) {
             if (err) throw err;
             console.log("Card updated!");
@@ -331,8 +356,34 @@ http.createServer(function(req, res) {
         str = str_withoutQuote.replace(/%20/g, " ");
         console.log("JSON string received: " + str);
 
-        updateCard(currentTable, JSON.parse(str));
+        keyStr = req.url.slice(req.url.indexOf('?getoverduewords') + '?getoverduewords'.length, req.url.indexOf('{'));
 
+        validateJWT(keyStr, function(userinfo) {
+            if (userinfo.name) { // a valid JSON object was received
+
+                // retrieve the current card table
+
+                var currentCardTable = '';
+                var sql = "SELECT currenttable FROM userinfo WHERE username = '" + userinfo.name + "'";
+                useDB(mainDB);
+                con.query(sql, function(err, result) {
+                    if (err) throw err;
+                    var currentCardTable = result[0].currenttable;
+                    console.log("currentCardTable = " + currentCardTable);
+
+                    // set the database to be used
+                    var db = userinfo.name.replace(/@/g, 'at');
+                    var db = db.replace(/\./g, 'dot');
+                    console.log("db: " + db);
+
+                    updateCard(currentCardTable, db, JSON.parse(str));
+
+                    useDB(mainDB);
+                });
+            } else {
+                console.log("Something went wrong! Card not updated.");
+            }
+        });
         res.end();
     }
 
