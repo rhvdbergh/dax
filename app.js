@@ -228,9 +228,11 @@ http.createServer(function(req, res) {
     // 0 token invalid, malformed token, etc
     // 1 token valid
     // 2 token expired
+    // 3 user does not exist or wrong password entered
     if ((req.url.indexOf('?validateJWT') != -1) && req.method === "GET") { // test if query was submitted
 
         console.log("Request for JWT validation received.");
+        // keyStr is the jwt
         keyStr = req.url.slice(req.url.indexOf('?validateJWT') + '?validateJWT'.length);
         console.log("keyStr = " + keyStr);
 
@@ -248,9 +250,23 @@ http.createServer(function(req, res) {
                     return res.end();
                 }
             }
-            console.log("After decoding, user name = " + decoded.name);
-            res.writeHead(200, { 'content-type': 'text/html' });
-            res.write("1");
+
+            // check to see if there is a user in the userinfo table with the name and password
+            var sql = "SELECT * FROM userinfo WHERE username = '" + decoded.name + "' AND psw = '" + decoded.psw + "' LIMIT 1;";
+            con.query(sql, function(err, result) {
+                if (err) throw err;
+                if (result.length > 0) { // the username and password exist and match
+                    console.log("User logged in successfully!");
+                    res.writeHead(200, { 'content-type': 'text/html' });
+                    res.write("1");
+                } else {
+                    console.log("User does not exist or wrong password entered.");
+                    res.writeHead(200, { 'content-type': 'text/html' });
+                    res.write("3");
+                }
+
+            });
+
         });
 
         return res.end();
@@ -341,7 +357,7 @@ http.createServer(function(req, res) {
                     currentDatabase = "vocabspace";
                     currentTable = "userinfo";
                     // generate jwt key which will expire in jwtExpiry amount of days (should be 7)
-                    var jwtKey = jwt.sign({ 'name': post.uname }, jwtSecret, { expiresIn: jwtExpiry });
+                    var jwtKey = jwt.sign({ 'name': post.uname, 'psw': post.psw }, jwtSecret, { expiresIn: jwtExpiry });
                     console.log('JWT generated: ' + jwtKey);
                     // return the user to the web page selected above (html/add.html):
                     // add to the document a script with a jwt as login key

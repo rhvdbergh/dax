@@ -39,6 +39,10 @@ $(document).ready(function() {
                 console.log("Token has expired. New login required.");
                 location.href = "../index.html";
             }
+            if (data === "3") { // user does not exist or wrong password entered
+                console.log("User does not existed or wrong password was entered.");
+                location.href = "../index.html";
+            }
         });
     } else {
 
