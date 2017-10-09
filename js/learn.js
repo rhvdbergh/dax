@@ -299,7 +299,7 @@ $(document).ready(function() {
                 $('.review_question').hide();
                 console.log("Card discarded from session: " + JSON.stringify(learnedObj[finalReviewPlace]));
 
-                if (reviewPlace < shortTermLearnedObj.length - 1) {
+                if (finalReviewPlace < shortTermLearnedObj.length - 1) {
 
                     finalReviewPlace++;
 
