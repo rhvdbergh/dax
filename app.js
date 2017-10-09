@@ -427,4 +427,17 @@ http.createServer(function(req, res) {
         });
     }
 
+    if ((req.url.indexOf('.ico') != -1) && req.method === "GET") { //test to see if file has .js extension
+        fs.readFile(__dirname + req.url, function(err, data) {
+            if (err) {
+                res.writeHead(404, { 'content-type': 'text/html' });
+                return res.end("404 not found");
+            }
+            //if file is found, return
+            res.writeHead(200, { 'content-type': 'image/x-icon' });
+            res.write(data);
+            return res.end();
+        });
+    }
+
 }).listen(8080);
