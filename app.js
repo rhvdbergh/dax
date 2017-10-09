@@ -17,6 +17,7 @@ var jwtExpiry = "7d"; // expiry date of web tokens; should be "7d"
 // current working mysql database and table
 // for debugging purposes
 var currentDatabase = "vocabspace";
+var mainDB = "vocabspace"; // value should be "vocabspace"
 var currentTable = "userinfo";
 
 // Create connection to MySQL database;
@@ -50,9 +51,10 @@ function useDB(dbName, callback) {
         console.log("Database " + dbName + " selected for use.");
         callback;
     });
+
 }
 
-createDB(currentDatabase, useDB(currentDatabase));
+createDB(currentDatabase);
 
 // create a table if it doesn't exist
 // overdue column functions as a boolean column where 0 = false, 1 = true;
@@ -66,6 +68,8 @@ function createCardsTable(tableName, callback) {
 }
 
 // for debugging purposes
+useDB('rhvdberghatgmaildotcom');
+// for debugging purposes
 createCardsTable('testtable');
 
 function createUserInfoTable(tableName, callback) {
@@ -77,6 +81,7 @@ function createUserInfoTable(tableName, callback) {
     });
 }
 
+useDB(mainDB);
 createUserInfoTable(currentTable);
 
 // helper-function for building sql string for calculating overdue timestamps
@@ -239,6 +244,7 @@ http.createServer(function(req, res) {
                 }
             }
             // check to see if there is a user in the userinfo table with the name and password
+            //  useDB(mainDB, function() {
             var sql = "SELECT * FROM userinfo WHERE username = '" + decoded.name + "' AND psw = '" + decoded.psw + "' LIMIT 1;";
             con.query(sql, function(err, result) {
                 if (err) throw err;
@@ -249,6 +255,7 @@ http.createServer(function(req, res) {
                 }
             });
         });
+        //   });
 
     }
 
@@ -361,26 +368,38 @@ http.createServer(function(req, res) {
                 // test to see if the POST request was to update a card
                 // if the parsed data contains .front_text, this must be a card
                 if (post.front_text) {
-                    console.log("Will now write to MySQL database");
-                    console.log("Front text is: " + post.front_text);
-                    console.log("Back text is: " + post.back_text);
-                    console.log("Key is: " + post.key);
+                    validateJWT(post.key, function(userinfo) {
+                        if (userinfo.name) { // jwt is valid, continue with update
+                            console.log("Will now write to MySQL database");
+                            console.log("Front text is: " + post.front_text);
+                            console.log("Back text is: " + post.back_text);
+                            console.log("Key is: " + post.key);
+                            // set the database to be used
+                            var db = userinfo.name.replace(/@/g, 'at');
+                            var db = db.replace(/\./g, 'dot');
 
-                    // MySQL query handling
-                    con.query("USE " + currentDatabase, function(err, result) {
-                        if (err) throw err;
-                        var sql = "INSERT INTO " + currentTable + " (front, back, timestamp) VALUES ('" + post.front_text + "', '" + post.back_text + "', '" + calculateTimestamp().toString() + "')";
-                        con.query(sql, function(err, result) {
-                            if (err) throw err;
-                            console.log("MySQL command: " + sql);
-                        });
+                            console.log("db: " + db);
+
+                            useDB(db);
+                            console.log("you are here");
+                            // MySQL query handling
+                            var sql = "INSERT INTO " + "testtable" + " (front, back, timestamp) VALUES ('" + post.front_text + "', '" + post.back_text + "', '" + calculateTimestamp().toString() + "')";
+                            con.query(sql, function(err, result) {
+                                if (err) throw err;
+                                console.log("MySQL command: " + sql);
+                                // return the user to the web page selected above (html/add.html):
+                                res.writeHead(200, { 'content-type': 'text/html' });
+                                res.write(data);
+                                return res.end();
+                            });
+                            useDB(mainDB);
+                        } else { //jwt was invalid
+                            // user has been logged out, return to index.html!
+                            res.writeHead(200, { 'content-type': 'text/html' });
+                            res.write("<script>location.href='../index.html';</script>");
+                            return res.end();
+                        }
                     });
-
-                    // return the user to the web page selected above (html/add.html):
-                    res.writeHead(200, { 'content-type': 'text/html' });
-                    res.write(data);
-                    return res.end();
-
                     // else test if POST request was to log in
                     // if the parsed data contains a .uname field, this must be a login attempt
                 } else if (post.uname) {
