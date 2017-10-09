@@ -259,18 +259,15 @@ http.createServer(function(req, res) {
                     console.log("User logged in successfully!");
                     res.writeHead(200, { 'content-type': 'text/html' });
                     res.write("1");
+                    return res.end();
                 } else {
                     console.log("User does not exist or wrong password entered.");
                     res.writeHead(200, { 'content-type': 'text/html' });
                     res.write("3");
+                    return res.end();
                 }
-
             });
-
         });
-
-        return res.end();
-
     }
 
     function updateCard(tableName, card) {
