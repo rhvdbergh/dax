@@ -374,25 +374,35 @@ http.createServer(function(req, res) {
                             console.log("Front text is: " + post.front_text);
                             console.log("Back text is: " + post.back_text);
                             console.log("Key is: " + post.key);
-                            // set the database to be used
-                            var db = userinfo.name.replace(/@/g, 'at');
-                            var db = db.replace(/\./g, 'dot');
 
-                            console.log("db: " + db);
-
-                            useDB(db);
-                            console.log("you are here");
-                            // MySQL query handling
-                            var sql = "INSERT INTO " + "testtable" + " (front, back, timestamp) VALUES ('" + post.front_text + "', '" + post.back_text + "', '" + calculateTimestamp().toString() + "')";
+                            // retrieve the current card table
+                            useDB(mainDB);
+                            var currentCardTable = '';
+                            var sql = "SELECT currenttable FROM userinfo WHERE username = '" + userinfo.name + "'";
                             con.query(sql, function(err, result) {
                                 if (err) throw err;
-                                console.log("MySQL command: " + sql);
-                                // return the user to the web page selected above (html/add.html):
-                                res.writeHead(200, { 'content-type': 'text/html' });
-                                res.write(data);
-                                return res.end();
+
+                                var currentCardTable = result[0].currenttable;
+                                console.log("currentCardTable = " + currentCardTable);
+                                // set the database to be used
+                                var db = userinfo.name.replace(/@/g, 'at');
+                                var db = db.replace(/\./g, 'dot');
+                                console.log("db: " + db);
+                                useDB(db);
+
+                                // MySQL query handling
+                                var sql = "INSERT INTO " + currentCardTable + " (front, back, timestamp) VALUES ('" + post.front_text + "', '" + post.back_text + "', '" + calculateTimestamp().toString() + "')";
+
+                                con.query(sql, function(err, result) {
+                                    if (err) throw err;
+                                    console.log("MySQL command: " + sql);
+                                    useDB(mainDB);
+                                    // return the user to the web page selected above (html/add.html):
+                                    res.writeHead(200, { 'content-type': 'text/html' });
+                                    res.write(data);
+                                    return res.end();
+                                });
                             });
-                            useDB(mainDB);
                         } else { //jwt was invalid
                             // user has been logged out, return to index.html!
                             res.writeHead(200, { 'content-type': 'text/html' });
