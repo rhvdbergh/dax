@@ -66,10 +66,10 @@ function createCardsTable(tableName, callback) {
 }
 
 // for debugging purposes
-// createCardsTable(currentTable);
+createCardsTable('testtable');
 
 function createUserInfoTable(tableName, callback) {
-    var sql = "CREATE TABLE IF NOT EXISTS " + tableName + " (id INT NOT NULL AUTO_INCREMENT, username TINYTEXT, psw TINYTEXT, PRIMARY KEY (id))"
+    var sql = "CREATE TABLE IF NOT EXISTS " + tableName + " (id INT NOT NULL AUTO_INCREMENT, username TINYTEXT, psw TINYTEXT, currenttable TINYTEXT, PRIMARY KEY (id))"
     con.query(sql, function(err, result) {
         if (err) throw err;
         console.log("Table " + tableName + " exists.");
@@ -224,6 +224,34 @@ http.createServer(function(req, res) {
     }
 
     // validation of jwt
+    // // possible responses:
+    // 0 token invalid, malformed token, etc
+    // if a JSON object is returned with .name, user is logged in
+    // 2 token expired
+    // 3 user does not exist or wrong password entered
+    function validateJWT(keyStr, callback) {
+        jwt.verify(keyStr, jwtSecret, function(err, decoded) {
+            if (err) {
+                if (err.name === "TokenExpiredError") {
+                    callback(2);
+                } else {
+                    callback(0);
+                }
+            }
+            // check to see if there is a user in the userinfo table with the name and password
+            var sql = "SELECT * FROM userinfo WHERE username = '" + decoded.name + "' AND psw = '" + decoded.psw + "' LIMIT 1;";
+            con.query(sql, function(err, result) {
+                if (err) throw err;
+                if (result.length > 0) { // the username and password exist and match
+                    callback(decoded);
+                } else {
+                    callback(3);
+                }
+            });
+        });
+
+    }
+
     // possible responses:
     // 0 token invalid, malformed token, etc
     // 1 token valid
@@ -236,37 +264,42 @@ http.createServer(function(req, res) {
         keyStr = req.url.slice(req.url.indexOf('?validateJWT') + '?validateJWT'.length);
         console.log("keyStr = " + keyStr);
 
-        jwt.verify(keyStr, jwtSecret, function(err, decoded) {
-            if (err) {
-                if (err.name === "TokenExpiredError") {
-                    console.log("Token Expired; New login required.");
-                    res.writeHead(200, { 'content-type': 'text/html' });
-                    res.write("2");
-                    return res.end();
-                } else {
-                    console.log("Something wrong with the user token.");
-                    res.writeHead(200, { 'content-type': 'text/html' });
-                    res.write("0");
-                    return res.end();
+        validateJWT(keyStr, function(validationResponse) {
+            console.log('validationResponse is: ' + JSON.stringify(validationResponse));
+            if (validationResponse.name) { // a JSON object was returned, so user logged in!
+                console.log("User logged in successfully!");
+                res.writeHead(200, { 'content-type': 'text/html' });
+                res.write("1");
+                return res.end();
+            } else {
+                switch (validationResponse) {
+                    case 0:
+                        console.log("Something wrong with the user token.");
+                        res.writeHead(200, { 'content-type': 'text/html' });
+                        res.write("0");
+                        return res.end();
+                        break;
+                    case 2:
+                        console.log("Token Expired; New login required.");
+                        res.writeHead(200, { 'content-type': 'text/html' });
+                        res.write("2");
+                        return res.end();
+                        break;
+                    case 3:
+                        console.log("User does not exist or wrong password entered.");
+                        res.writeHead(200, { 'content-type': 'text/html' });
+                        res.write("3");
+                        return res.end();
+                        break;
+                    default:
+                        console.log("Something wrong with the user token.");
+                        res.writeHead(200, { 'content-type': 'text/html' });
+                        res.write("0");
+                        return res.end();
+                        break;
                 }
             }
 
-            // check to see if there is a user in the userinfo table with the name and password
-            var sql = "SELECT * FROM userinfo WHERE username = '" + decoded.name + "' AND psw = '" + decoded.psw + "' LIMIT 1;";
-            con.query(sql, function(err, result) {
-                if (err) throw err;
-                if (result.length > 0) { // the username and password exist and match
-                    console.log("User logged in successfully!");
-                    res.writeHead(200, { 'content-type': 'text/html' });
-                    res.write("1");
-                    return res.end();
-                } else {
-                    console.log("User does not exist or wrong password entered.");
-                    res.writeHead(200, { 'content-type': 'text/html' });
-                    res.write("3");
-                    return res.end();
-                }
-            });
         });
     }
 
@@ -334,10 +367,13 @@ http.createServer(function(req, res) {
                     console.log("Key is: " + post.key);
 
                     // MySQL query handling
-                    var sql = "INSERT INTO " + currentTable + " (front, back, timestamp) VALUES ('" + post.front_text + "', '" + post.back_text + "', '" + calculateTimestamp().toString() + "')";
-                    con.query(sql, function(err, result) {
+                    con.query("USE " + currentDatabase, function(err, result) {
                         if (err) throw err;
-                        console.log("MySQL command: " + sql);
+                        var sql = "INSERT INTO " + currentTable + " (front, back, timestamp) VALUES ('" + post.front_text + "', '" + post.back_text + "', '" + calculateTimestamp().toString() + "')";
+                        con.query(sql, function(err, result) {
+                            if (err) throw err;
+                            console.log("MySQL command: " + sql);
+                        });
                     });
 
                     // return the user to the web page selected above (html/add.html):
