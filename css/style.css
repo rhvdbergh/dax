@@ -89,6 +89,10 @@ button {
     border-radius: 5px;
 }
 
+.centered {
+    text-align: center;
+}
+
 #yes_btn,
 #no_btn {
     width: 30%;
@@ -141,7 +145,7 @@ button:hover {
     background-color: var(--active-navbar);
 }
 
-.login_container,
+.login_and_signup_container,
 .add_word_container,
 .review_box {
     position: absolute;
