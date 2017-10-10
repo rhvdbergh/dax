@@ -76,7 +76,8 @@ input[type=email] {
     font-size: 1.2em;
 }
 
-button {
+button,
+.submit_signup_btn {
     background-color: var(--navbar-color);
     color: var(--navbar-text);
     padding: 12px 14px;
@@ -87,6 +88,12 @@ button {
     font-family: 'Open Sans', sans-serif;
     font-size: 1.5em;
     border-radius: 5px;
+    text-decoration: none;
+}
+
+.submit_signup_btn {
+    float: right;
+    text-align: center;
 }
 
 .centered {
@@ -141,7 +148,8 @@ button {
     cursor: pointer;
 }
 
-button:hover {
+button:hover,
+.submit_signup_btn:hover {
     background-color: var(--active-navbar);
 }
 

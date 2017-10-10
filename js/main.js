@@ -37,12 +37,7 @@ $(document).ready(function() {
             $('.login_container').append("<input type='password' placeholder='Password' name='psw' required>");
             $('.login_container').append("<button type='submit' class='submit_login_btn' name='login_btn' value='login_btn'>Login</button>");
             $('.login_container').append("<p class='centered'>or</p>");
-            $('.signup_container').append("<button type='submit' class='submit_signup_btn' name='signup_btn' value='signup_btn'>Sign up</button>");
-
-            /* $('#nav_btn_add').hide();
-             $('#nav_btn_learn').hide();
-             $('#nav_btn_review').hide();
-             $('#nav_btn_account').hide(); */
+            $('.signup_container').append("<a href='./html/signup.html' class='submit_signup_btn'>Sign up</a>");
         }
 
         // if the user login is successful:
@@ -53,7 +48,7 @@ $(document).ready(function() {
             // the logout button removes the localStorage key - the script is appended here
             $('.navbar-right').append("<li class='logout'><a href='./index.html'>Logout</a></li><script>$('.logout').on('click', function() {localStorage.removeItem('key');});</script>");
             //  $('.navbar-right').append("<li id='nav_btn_account'><a href=''>Account</a></li>");
-            $('.login_container').hide();
+            $('.login_and_signup_container').hide();
         }
     }
 });
