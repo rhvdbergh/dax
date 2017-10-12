@@ -97,6 +97,22 @@ function createUserInfoTable(tableName, callback) {
     });
 }
 
+function createNewUser(uname, psw, callback) {
+    useDB(mainDB);
+    var sql = "INSERT INTO userinfo (username, psw) VALUES ('" + uname + "', '" + psw + "');";
+    con.query(sql, function(err, result) {
+        if (err) throw err;
+        console.log("User info updated. Username: " + uname + ", password: " + psw);
+        callback;
+    });
+
+    // create a new database for this user
+    // first give the user a MySQL friendly name
+    var db = uname.replace(/@/g, 'at');
+    var db = db.replace(/\./g, 'dot');
+    createDB(db);
+}
+
 // helper-function for building sql string for calculating overdue timestamps
 function buildBatchSQLQuery(myBatch, time) {
 
@@ -513,6 +529,18 @@ http.createServer(function(req, res) {
                     res.write(data + "<script>localStorage.setItem('key', '" + jwtKey + "');</script>");
                     console.log("Sending login script back");
                     return res.end();
+                } else if (post.newuname) {
+                    console.log("New user request ")
+                    res.writeHead(200, { 'content-type': 'text/html' });
+
+                    createNewUser(post.newuname, post.newpsw);
+
+                    // generate jwt key; user will be logged in when landing on the index.html page
+                    var jwtKey = jwt.sign({ 'name': post.newuname, 'psw': post.newpsw }, jwtSecret, { expiresIn: jwtExpiry });
+                    res.write(data + "<script>localStorage.setItem('key', '" + jwtKey + "');</script>");
+
+                    console.log("Sending user back to index.html");
+                    res.write("<script>location.href='../index.html';</script>");
                 }
             });
 
