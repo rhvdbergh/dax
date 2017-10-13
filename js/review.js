@@ -8,12 +8,14 @@ $(document).ready(function() {
     var jsonObj;
     var place = 0; // keeps track of which card is currently being learned
     var key = localStorage.getItem('key');
+    var currenttable = localStorage.getItem('currenttable');
 
     $(".logout").on('click', function() {
         localStorage.removeItem('key');
     });
 
-    if (key != null) { // if there is no key return to index.html
+    // if there is no key or no currenttable return to index.html
+    if (key != null) {
 
         $.get("?validateJWT" + key, function(data) {
             if (data === "0") { // there is something wrong with the token. New login and token required
@@ -190,6 +192,18 @@ $(document).ready(function() {
         });
     }
 
-    retrieveCards(learnCards);
+    if (currenttable === null || currenttable === "" && currenttable === "none") {
+        location.href = "../index.html";
+    } else {
+
+        $('.review_box').append("<p class='review_word_front'></p>");
+        $('.review_box').append("<p class='review_word_back'></p>");
+        $('.review_box').append("<p class='question review_question'>Did you know this word?</p>");
+        $('.review_box').append("<button id='yes_btn' class='review_question'>Yes</button>");
+        $('.review_box').append("<button id='no_btn' class='review_question'>No</button>");
+
+        retrieveCards(learnCards);
+
+    }
 
 });

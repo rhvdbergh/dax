@@ -536,7 +536,11 @@ http.createServer(function(req, res) {
                                 if (err) throw err;
                                 var currentCardTable = result[0].currenttable;
                                 console.log("currentCardTable = " + currentCardTable);
-                                res.write("<script>localStorage.setItem('currenttable', '" + currentCardTable + "');</script>");
+                                if (currentCardTable != null) {
+                                    res.write("<script>localStorage.setItem('currenttable', '" + currentCardTable + "');</script>");
+                                } else {
+                                    res.write("<script>localStorage.setItem('currenttable', " + currentCardTable + ");</script>");
+                                }
                                 // return the user to the web page selected above (html/add.html):
                                 // add to the document a script with a jwt as login key
                                 // if the user has a current working table, set currenttable on localstorage

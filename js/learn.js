@@ -19,12 +19,14 @@ $(document).ready(function() {
     var reviewPlace = 0; // similar to place, but in review objects
     var finalReviewPlace = 0;
     var key = localStorage.getItem('key');
+    var currenttable = localStorage.getItem('currenttable');
 
     $(".logout").on('click', function() {
         localStorage.removeItem('key');
     });
 
-    if (key != null) { // if there is no key return to index.html
+    // if there is no key or no currenttable return to index.html
+    if (key != null && currenttable != null && currenttable != "" && currenttable != "none") {
 
         $.get("?validateJWT" + key, function(data) {
             if (data === "0") { // there is something wrong with the token. New login and token required
@@ -320,7 +322,23 @@ $(document).ready(function() {
         });
     }
 
-    retrieveCards(learnCards());
+    if (currenttable === null || currenttable === "" && currenttable === "none") {
+        location.href = "../index.html";
+    } else {
+
+        $('.review_box').append("<p class='review_word_front'></p>");
+        $('.review_box').append("<p class='review_word_back'></p>");
+        $('.review_box').append("<p class='question review_question'>Did you know this word?</p>");
+        $('.review_box').append("<button id='yes_btn' class='review_question'>Yes</button>");
+        $('.review_box').append("<button id='no_btn' class='review_question'>No</button>");
+        $('.review_box').append("<button class='next_word_button'>Next word</button>");
+        $('.review_box').append("<button class='review_short_button'>Review words</button>");
+        $('.review_box').append("<button class='review_final_button'>Review learned words</button>");
+        $('.review_box').append("<a href='learn.html'><button class='all_done_button'>All done! Click here to start a new session!</button></a>");
+
+        retrieveCards(learnCards());
+
+    }
 
     function timer() {
         setInterval(function() {
