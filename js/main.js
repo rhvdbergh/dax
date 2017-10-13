@@ -1,6 +1,7 @@
 $(document).ready(function() {
     var loggedIn = false;
     var key = localStorage.getItem('key');
+    var currenttable = localStorage.getItem('currenttable');
 
     $('.submit_login_btn').on('click', function() {
 
@@ -38,6 +39,7 @@ $(document).ready(function() {
             $('.login_container').append("<button type='submit' class='submit_login_btn' name='login_btn' value='login_btn'>Login</button>");
             $('.login_container').append("<p class='centered'>or</p>");
             $('.signup_container').append("<a href='./html/signup.html' class='submit_signup_btn'>Sign up</a>");
+            $('.create_table_container').hide();
         }
 
         // if the user login is successful:
@@ -49,6 +51,10 @@ $(document).ready(function() {
             $('.navbar-right').append("<li class='logout'><a href='./index.html'>Logout</a></li><script>$('.logout').on('click', function() {localStorage.removeItem('key');});</script>");
             //  $('.navbar-right').append("<li id='nav_btn_account'><a href=''>Account</a></li>");
             $('.login_and_signup_container').hide();
+            if (currenttable === null || currenttable != "" || currenttable != "none") { // the user doesn't appear to have any tables, and no table is selected
+                $('.create_table_container').show();
+                $('.create_table_container').append("<button type='submit' class='create_table_btn' name='create_table_btn' value='create_table_btn'>Create a new set of cards</script>");
+            }
         }
     }
 });

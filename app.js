@@ -523,23 +523,50 @@ http.createServer(function(req, res) {
                     // generate jwt key which will expire in jwtExpiry amount of days (should be 7)
                     var jwtKey = jwt.sign({ 'name': post.uname, 'psw': post.psw }, jwtSecret, { expiresIn: jwtExpiry });
                     console.log('JWT generated: ' + jwtKey);
-                    // return the user to the web page selected above (html/add.html):
-                    // add to the document a script with a jwt as login key
-                    res.writeHead(200, { 'content-type': 'text/html' });
-                    res.write(data + "<script>localStorage.setItem('key', '" + jwtKey + "');</script>");
-                    console.log("Sending login script back");
-                    return res.end();
+
+                    // use this key to check if the user has a currenttable
+                    var currentCardTable = '';
+
+                    validateJWT(jwtKey, function(userinfo) {
+                        res.writeHead(200, { 'content-type': 'text/html' });
+
+                        if (userinfo.name) { // the user exists in the database and will be logged on 
+                            var sql = "SELECT currenttable FROM userinfo WHERE username = '" + userinfo.name + "'";
+                            con.query(sql, function(err, result) {
+                                if (err) throw err;
+                                var currentCardTable = result[0].currenttable;
+                                console.log("currentCardTable = " + currentCardTable);
+                                res.write("<script>localStorage.setItem('currenttable', '" + currentCardTable + "');</script>");
+                                // return the user to the web page selected above (html/add.html):
+                                // add to the document a script with a jwt as login key
+                                // if the user has a current working table, set currenttable on localstorage
+                                res.write(data + "<script>localStorage.setItem('key', '" + jwtKey + "');</script>");
+                                console.log("Sending login script back");
+                                return res.end();
+                            });
+                        } else { // validation unsuccesful, remove any previous currenttable info
+                            res.write("<script>localStorage.removeItem('currenttable');</script>");
+                            res.write(data + "<script>localStorage.setItem('key', '" + jwtKey + "');</script>");
+                            console.log("Sending login script back");
+                            return res.end();
+                        }
+                    });
+
                 } else if (post.newuname) {
                     console.log("New user request ")
                     res.writeHead(200, { 'content-type': 'text/html' });
 
                     createNewUser(post.newuname, post.newpsw);
 
+                    // as this is a new user, there will be no card tables yet
+                    // remove any localStorage tables from previous users' sessions
+                    res.write("<script>localStorage.removeItem('currenttable');</script>");
+
                     // generate jwt key; user will be logged in when landing on the index.html page
                     var jwtKey = jwt.sign({ 'name': post.newuname, 'psw': post.newpsw }, jwtSecret, { expiresIn: jwtExpiry });
                     res.write(data + "<script>localStorage.setItem('key', '" + jwtKey + "');</script>");
 
-                    console.log("Sending user back to index.html");
+                    // return the user to the index.html screen
                     res.write("<script>location.href='../index.html';</script>");
                 }
             });
