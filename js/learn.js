@@ -322,7 +322,7 @@ $(document).ready(function() {
         });
     }
 
-    if (currenttable === null || currenttable === "" && currenttable === "none") {
+    if (currenttable === null || currenttable === "" || currenttable === "null") {
         location.href = "../index.html";
     } else {
 

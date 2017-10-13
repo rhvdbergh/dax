@@ -7,7 +7,7 @@ $(document).ready(function() {
         localStorage.removeItem('key');
     });
 
-    if (currenttable === null || currenttable === "" && currenttable === "none") {
+    if (currenttable === null || currenttable === "" || currenttable === "null") {
         location.href = "../index.html";
     } else {
 
